@@ -36,7 +36,7 @@ void load_example(document &document, const std::string &field_number_name, cons
         for (const auto &text: texts) {
             entry e;
 
-            e.numbers.emplace_back(field_number_name, field_number(i + 1));
+            e.numbers.emplace_back(field_number_name, field_number(document.compute_next_number_value(field_number_name)));
             e.texts.emplace_back(field_text_name, field_text(text.first));
             e.keywords.emplace_back(field_keyword_name, field_keyword(text.second));
 

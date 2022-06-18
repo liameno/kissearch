@@ -150,10 +150,14 @@ namespace kissearch {
         return idf * (tf * (k + 1)) / (tf + k * (1 - b + b * field_size / avgdl));
     }
 
+    ulong document::compute_next_number_value(const std::string &field_name) {
+        if (entries.empty()) return 1;
+        return entries.back().find_field_number(field_name).number + 1;
+    }
+
     void document::clear_cache_idf() {
         cache_idf = std::vector<cache_idf_t>(cache_idf_size);
     }
-
     void document::index_text_field(const std::string &field_name) {
         clear_cache_idf();
 
@@ -190,7 +194,7 @@ namespace kissearch {
 
         return results;
     }
-    std::vector<document::result_t> document::text_search(std::string query, const std::string &field_name) {
+    std::vector<document::result_t> document::text_search(std::string query, const std::string &field_name, const double &min_score, const bool &sort_by_score) {
         auto terms = tokenize(query);
         stem(terms);
 
@@ -208,7 +212,7 @@ namespace kissearch {
                 }
             }
 
-            if (score < MIN_TEXT_SEARCH_SCORE) continue;
+            if (score < min_score) continue;
             results.emplace_back(entry, score);
         }
 

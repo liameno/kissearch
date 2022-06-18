@@ -11,8 +11,6 @@
 
 #include "entry.h"
 
-#define MIN_TEXT_SEARCH_SCORE 0.1
-
 namespace kissearch {
     struct document {
     public:
@@ -46,12 +44,14 @@ namespace kissearch {
         double compute_idf(entry &e, const std::string &term, const std::string &field_name);
         double compute_bm25(entry &e, const std::string &term, field_text &field, const std::string &field_name, const ulong &document_length_in_words);
 
-        void clear_cache_idf();
+        //ID
+        ulong compute_next_number_value(const std::string &field_name);
 
+        void clear_cache_idf();
         void index_text_field(const std::string &field_name);
 
         std::vector<result_t> number_search(const u_long &query, const std::string &field_name);
-        std::vector<result_t> text_search(std::string query, const std::string &field_name);
+        std::vector<result_t> text_search(std::string query, const std::string &field_name, const double &min_score = 0.1, const bool &sort_by_score = true);
         std::vector<result_t> keyword_search(const std::string &query, const std::string &field_name);
 
         void add(const entry &e);
