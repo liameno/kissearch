@@ -408,7 +408,10 @@ namespace porter2 {
         bool stem(std::string &word) {
             auto length = word.length();
 
-            if (length <= 2 || length >= 45) {
+            if (length <= 1) {
+                return false;
+            }
+            if (length > 40) {
                 return true;
             }
             if (is_stop(word)) {
