@@ -3,8 +3,6 @@
 #include <string>
 #include <algorithm>
 #include <filesystem>
-#include <zlib.h>
-#include <cstring>
 
 #include "include/document.h"
 

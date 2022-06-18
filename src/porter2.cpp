@@ -14,7 +14,7 @@ namespace porter2 {
         bool if_contains_vowel_replace_end(std::string &s, const std::string &from, const std::string &to) {
             auto length = s.length();
             if (from.length() > length) return false;
-            return length > 2 && contains_vowel(s, 0, s.length() - from.length()) && replace_end(s, from, to);
+            return length > 2 && contains_vowel(s, 0, (int)s.length() - (int)from.length()) && replace_end(s, from, to);
         }
         bool if_contains_vowel_replace_end(std::string &s, const int &end, const std::string &from, const std::string &to) {
             auto length = s.length();
@@ -34,7 +34,7 @@ namespace porter2 {
                 }
             }
 
-            return length; //the end of the word
+            return (int)length; //the end of the word
         }
         bool is_double_suffix(const std::string &s) {
             const static std::string suffixes[] = {
@@ -158,7 +158,7 @@ namespace porter2 {
 
             for (const auto &special_word: special_words) {
                 if (starts_with(word, special_word)) {
-                    return special_word.length();
+                    return (int)special_word.length();
                 }
             }
 
@@ -201,7 +201,7 @@ namespace porter2 {
             }
 
             if (ends_with(word, "us") || ends_with(word, "ss")) return;
-            if_contains_vowel_replace_end(word, length - 2, "s");
+            if_contains_vowel_replace_end(word, (int)length - 2, "s");
         }
         void step_1b(std::string &word, const int &r1) {
             if (replace_end(word, r1, "eedly", "ee") || replace_end(word, r1, "eed", "ee")) {
