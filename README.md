@@ -9,6 +9,6 @@ A fast fulltext search engine
 - Tokenizer
 - Text/Keyword/Number fields
 - Load/Save index from file/memory
-- LZ4 Compression(when saving)
+- Compression(when saving)
 ## License
 GNU Affero General Public License v3.0
