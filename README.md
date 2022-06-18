@@ -1,8 +1,9 @@
 # kissearch
-A fulltext search engine
+A fast fulltext search engine
 ###### Keep It Simple, Stupid
 ## Features
 - BM25
+- Cache
 - Index
 - Porter2 Stemmer (English)
 - Tokenizer
