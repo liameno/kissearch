@@ -9,6 +9,10 @@
 #include <algorithm>
 #include <memory>
 
+#define INIT_TERMS_SIZE 30
+#define INIT_INDEX_SIZE 20
+#define INIT_FIELDS_SIZE 1
+
 namespace kissearch {
     struct term_info {
         ushort count;
@@ -18,7 +22,7 @@ namespace kissearch {
     };
 
     struct field_number {
-        u_long number;
+        ulong number;
 
         field_number();
         explicit field_number(const size_t &number);

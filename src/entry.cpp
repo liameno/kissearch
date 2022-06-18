@@ -19,8 +19,8 @@ namespace kissearch {
     field_text::field_text() = default;
     field_text::field_text(const std::string &text) {
         this->text = text;
-        //this->terms.reserve(200);
-        //this->index.reserve(200);
+        this->terms.reserve(INIT_TERMS_SIZE);
+        this->index.reserve(INIT_INDEX_SIZE);
     }
 
     std::string &field_text::find_term(const std::string &s) {
@@ -34,7 +34,7 @@ namespace kissearch {
         return *found;
     }
     term_info &field_text::find_index(const std::string &s) {
-        auto lambada = [&](const index_t &c) { return c.first == s; };
+        const auto lambada = [&](const index_t &c) { return c.first == s; };
         auto found = std::find_if(index.begin(), index.end(), lambada);
 
         if (found == index.end()) {
@@ -52,7 +52,7 @@ namespace kissearch {
 
     __gnu_cxx::__normal_iterator<field_text::index_t *, std::vector<field_text::index_t>>
     field_text::find_index_it(const std::string &s) {
-        const static auto lambada = [&](const index_t &c) { return c.first == s; };
+        const auto lambada = [&](const index_t &c) { return c.first == s; };
         return std::find_if(index.begin(), index.end(), lambada);
     }
 
@@ -62,9 +62,9 @@ namespace kissearch {
     }
 
     entry::entry() {
-        numbers = std::vector<field_number_t>(1);
-        numbers = std::vector<field_number_t>(1);
-        numbers = std::vector<field_number_t>(1);
+        numbers.reserve(INIT_FIELDS_SIZE);
+        texts.reserve(INIT_FIELDS_SIZE);
+        keywords.reserve(INIT_FIELDS_SIZE);
     }
 
     field_number &entry::find_field_number(const std::string &s) {

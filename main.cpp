@@ -3,10 +3,23 @@
 #include <string>
 #include <algorithm>
 #include <filesystem>
+#include <zlib.h>
+#include <cstring>
 
 #include "include/document.h"
 
+#define reset   "\033[0m"
+#define black    "\033[30m"
+#define red     "\033[31m"
+#define green   "\033[32m"
+#define yellow  "\033[33m"
+#define blue    "\033[34m"
+#define magenta "\033[35m"
+#define cyan    "\033[36m"
+#define white   "\033[37m"
+
 using namespace kissearch;
+using namespace std::chrono;
 
 void load_example(document &document, const std::string &field_number_name, const std::string &field_text_name, const std::string &field_keyword_name) {
     std::vector<std::pair<std::string, std::string>> texts = {
@@ -21,13 +34,9 @@ void load_example(document &document, const std::string &field_number_name, cons
 
     for (int i = 0; i < 1000; ++i) {
         for (const auto &text: texts) {
-            size_t n;
             entry e;
 
-            if (document.entries.empty()) n = 1;
-            else n = document.entries.back().find_field_number(field_number_name).number + 1;
-
-            e.numbers.emplace_back(field_number_name, field_number(n));
+            e.numbers.emplace_back(field_number_name, field_number(i + 1));
             e.texts.emplace_back(field_text_name, field_text(text.first));
             e.keywords.emplace_back(field_keyword_name, field_keyword(text.second));
 
@@ -37,8 +46,6 @@ void load_example(document &document, const std::string &field_number_name, cons
 }
 
 int main() {
-    using namespace std::chrono;
-
     const std::string file_name          = "../index.db";
     const std::string field_number_name  = "id";
     const std::string field_text_name    = "title";
@@ -49,55 +56,61 @@ int main() {
     const std::string keyword_query = "https://en.wikipedia.org/wiki/Hilltop_algorithm";
 
     document document;
+    document.name = "test";
 
     auto start_time = high_resolution_clock::now();
 
     if (!std::filesystem::exists(file_name)) {
         load_example(document, field_number_name, field_text_name, field_keyword_name);
-        std::cout << "From example" << std::endl;
+        std::cout << reset << "From example" << std::endl;
     } else {
         document.load(file_name);
-        std::cout << "From db" << std::endl;
+        std::cout << reset << "From db" << std::endl;
     }
 
     auto end_time = high_resolution_clock::now();
-    std::cout << "Load: " << duration_cast<milliseconds>(end_time - start_time).count() << " ms" << std::endl;
-    std::cout << "Size: " << document.entries.size() << std::endl;
+    std::cout << reset << "Load: " << cyan << duration_cast<milliseconds>(end_time - start_time).count() << " ms" << std::endl;
+    std::cout << reset << "Size: " << red << document.entries.size() << std::endl;
     start_time = high_resolution_clock::now();
 
     document.index_text_field(field_text_name);
 
     end_time = high_resolution_clock::now();
-    std::cout << "Index: " << duration_cast<milliseconds>(end_time - start_time).count() << " ms" << std::endl;
+    std::cout << reset << "Index: " << red << duration_cast<milliseconds>(end_time - start_time).count() << " ms" << std::endl;
     start_time = high_resolution_clock::now();
 
     auto n_results = document.number_search(number_query, field_number_name);
     auto t_results = document.text_search(text_query, field_text_name);
     auto k_results = document.keyword_search(keyword_query, field_keyword_name);
 
+    end_time = high_resolution_clock::now();
+    std::cout << reset << "Search: " << red << duration_cast<milliseconds>(end_time - start_time).count() << " ms" << std::endl;
+
+    std::cout << reset << "Found Numbers: " << green << n_results.size() << std::endl;
+    std::cout << reset << "Found Texts: " << green << t_results.size() << std::endl;
+    std::cout << reset << "Found Keywords: " << green << k_results.size() << std::endl;
+
     document::sort_text_results(t_results);
 
-    for (auto &result : n_results) {
+    /*for (auto &result : n_results) {
         auto &field = result.first.find_field_number(field_number_name);
-        //std::cout << field.number << " (score: " << result.second << ")" << std::endl;
+        std::cout << reset << field.number << green << " (score: " << result.second << ")" << std::endl;
     }
     for (auto &result : t_results) {
         auto &field = result.first.find_field_text(field_text_name);
-        //std::cout << field.text << " (score: " << result.second << ")" << std::endl;
+        std::cout << reset << field.text << green << " (score: " << result.second << ")" << std::endl;
     }
     for (auto &result : k_results) {
         auto &field = result.first.find_field_keyword(field_keyword_name);
-        //std::cout << field.keyword << " (score: " << result.second << ")" << std::endl;
-    }
+        std::cout << reset << field.keyword << green << " (score: " << result.second << ")" << std::endl;
+    }*/
 
-    end_time = high_resolution_clock::now();
-    std::cout << "Search: " << duration_cast<milliseconds>(end_time - start_time).count() << " ms" << std::endl;
     start_time = high_resolution_clock::now();
 
-    //document.save(file_name);
+    document.save(file_name);
 
     end_time = high_resolution_clock::now();
-    std::cout << "Save: " << duration_cast<milliseconds>(end_time - start_time).count() << " ms" << std::endl;
+    std::cout << reset << "Save: " << cyan << duration_cast<milliseconds>(end_time - start_time).count() << " ms" << std::endl;
 
     return 0;
 }

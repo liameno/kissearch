@@ -1,7 +1,7 @@
 #include "../include/document.h"
 
-#include "../include/lz4_frame_wrapper.h"
 #include "../include/porter2.h"
+#include "../include/compression.h"
 
 namespace kissearch {
     std::string document::get_file_content(const std::string &file_name) {
@@ -58,6 +58,34 @@ namespace kissearch {
 
             if (!swapped) break;
         }
+    }
+
+    void document::load_parse(const std::string &s, std::string &key, std::string &type, std::string &value) {
+        int start = 0;
+
+        while (true) {
+            size_t end = s.find('/', start);
+
+            if (end == std::string::npos) {
+                break;
+            }
+
+            if (start == 0) {
+                key = s.substr(start, end - start);
+                start = (int)end + 1;
+            } else {
+                type = s.substr(start, end - start);
+                start = (int)end + 1;
+                break;
+            }
+        }
+
+        if (type.empty()) {
+            type = key;
+            key.clear();
+        }
+
+        value = s.substr(start, s.size() - start);
     }
 
     document::document(const ulong &cache_idf_size, const double &k, const double &b) {
@@ -180,7 +208,7 @@ namespace kissearch {
                 }
             }
 
-            if (score <= 0) continue;
+            if (score < MIN_TEXT_SEARCH_SCORE) continue;
             results.emplace_back(entry, score);
         }
 
@@ -205,21 +233,11 @@ namespace kissearch {
     }
 
     void document::load(const std::string &file_name) {
-        if (!entries.empty()) entries.clear();
+        if (!entries.empty()) {
+            entries.clear();
+        }
 
-        std::string tmp_file_name = file_name + ".tmp";
-
-        FILE *input = fopen(file_name.c_str(), "rb");
-        FILE *output = fopen(tmp_file_name.c_str(), "wb");
-
-        lz4_frame_wrapper::decompress_file(input, output);
-
-        fclose(input);
-        fclose(output);
-
-        auto decompressed = get_file_content(tmp_file_name);
-
-        std::filesystem::remove(tmp_file_name);
+        auto decompressed = compression::decompress(get_file_content(file_name));
         std::stringstream stream(decompressed);
 
         std::string s;
@@ -235,37 +253,11 @@ namespace kissearch {
                 continue;
             }
 
-            auto start = 0;
-
             std::string key;
             std::string type;
             std::string value;
 
-            while (true) {
-                size_t end = s.find('/', start);
-
-                if (end == std::string::npos) {
-                    break;
-                }
-
-                if (start == 0) {
-                    key = s.substr(start, end - start);
-                    start = (int)end + 1;
-                } else {
-                    type = s.substr(start, end - start);
-                    start = (int)end + 1;
-                    break;
-                }
-            }
-
-            const auto s_size = s.size();
-
-            if (type.empty()) {
-                type = key;
-                key.clear();
-            }
-
-            value = s.substr(start, s_size - start);
+            load_parse(s, key, type, value);
 
             if (type == "n") {
                 e.numbers.emplace_back(key, field_number(value));
@@ -287,15 +279,21 @@ namespace kissearch {
             else if (type == "k") {
                 e.keywords.emplace_back(key, field_keyword(value));
             }
+            else if (type == "db") {
+                name = value;
+            }
         }
     }
     void document::save(const std::string &file_name) {
-        if (entries.empty()) return;
         if (std::filesystem::exists(file_name)) {
             std::filesystem::remove(file_name);
         }
 
         std::stringstream content;
+        content << "db"
+                << '/'
+                << name
+                << std::endl;
 
         for (auto &entry : entries) {
             for (auto &number : entry.numbers) {
@@ -341,21 +339,10 @@ namespace kissearch {
             content << ";" << std::endl;
         }
 
-        std::string data = content.str();
-        std::string tmp_file_name = file_name + ".tmp";
+        std::string data = compression::compress(content.str());
+        std::ofstream file(file_name,std::ofstream::binary);
 
-        std::ofstream file_tmp(tmp_file_name,std::ofstream::binary);
-        file_tmp.write(data.data(), (int)data.size());
-        file_tmp.close();
-
-        FILE *input = fopen(tmp_file_name.c_str(), "rb");
-        FILE *output = fopen(file_name.c_str(), "wb");
-
-        lz4_frame_wrapper::compress_file(input, output);
-
-        fclose(input);
-        fclose(output);
-
-        std::filesystem::remove(tmp_file_name);
+        file.write(data.data(), (int)data.size());
+        file.close();
     }
 }

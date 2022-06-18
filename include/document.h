@@ -11,6 +11,8 @@
 
 #include "entry.h"
 
+#define MIN_TEXT_SEARCH_SCORE 0.1
+
 namespace kissearch {
     struct document {
     public:
@@ -34,6 +36,8 @@ namespace kissearch {
         double k;
         double b;
         ulong cache_idf_size;
+    private:
+        static void load_parse(const std::string &s, std::string &key, std::string &type, std::string &value);
     public:
         explicit document(const ulong &cache_idf_size = 512, const double &k = 1.2, const double &b = 0.75);
 
