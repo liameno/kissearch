@@ -61,16 +61,38 @@ namespace kissearch {
         this->keyword = keyword;
     }
 
+    entry::entry() {
+        numbers = std::vector<field_number_t>(1);
+        numbers = std::vector<field_number_t>(1);
+        numbers = std::vector<field_number_t>(1);
+    }
+
     field_number &entry::find_field_number(const std::string &s) {
-        const static auto lambada = [&](const field_number_t &c) { return c.first == s; };
+        const auto lambada = [&](const field_number_t &c) { return c.first == s; };
         return std::find_if(numbers.begin(), numbers.end(), lambada)->second;
     }
     field_text &entry::find_field_text(const std::string &s) {
-        const static auto lambada = [&](const field_text_t &c) { return c.first == s; };
+        const auto lambada = [&](const field_text_t &c) { return c.first == s; };
         return std::find_if(texts.begin(), texts.end(), lambada)->second;
     }
     field_keyword &entry::find_field_keyword(const std::string &s) {
-        const static auto lambada = [&](const field_keyword_t &c) { return c.first == s; };
+        const auto lambada = [&](const field_keyword_t &c) { return c.first == s; };
         return std::find_if(keywords.begin(), keywords.end(), lambada)->second;
+    }
+
+    __gnu_cxx::__normal_iterator<entry::field_number_t *, std::vector<entry::field_number_t>>
+    entry::find_field_number_it(const std::string &s) {
+        const auto lambada = [&](const field_number_t &c) { return c.first == s; };
+        return std::find_if(numbers.begin(), numbers.end(), lambada);
+    }
+    __gnu_cxx::__normal_iterator<entry::field_text_t *, std::vector<entry::field_text_t>>
+    entry::find_field_text_it(const std::string &s) {
+        const auto lambada = [&](const field_text_t &c) { return c.first == s; };
+        return std::find_if(texts.begin(), texts.end(), lambada);
+    }
+    __gnu_cxx::__normal_iterator<entry::field_keyword_t *, std::vector<entry::field_keyword_t>>
+    entry::find_field_keyword_it(const std::string &s) {
+        const auto lambada = [&](const field_keyword_t &c) { return c.first == s; };
+        return std::find_if(keywords.begin(), keywords.end(), lambada);
     }
 }

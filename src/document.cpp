@@ -11,7 +11,7 @@ namespace kissearch {
             stream.seekg(0, std::ios::end);
             buffer.resize(stream.tellg());
             stream.seekg(0);
-            stream.read(const_cast<char *>(buffer.data()), buffer.size());
+            stream.read(const_cast<char *>(buffer.data()), (int)buffer.size());
 
             return buffer;
         }
@@ -223,8 +223,6 @@ namespace kissearch {
         std::stringstream stream(decompressed);
 
         std::string s;
-        getline(stream, s);
-
         entry e;
 
         std::string text_field;
@@ -233,6 +231,7 @@ namespace kissearch {
         while (getline(stream, s)) {
             if (s == ";") {
                 add(e);
+                e = entry();
                 continue;
             }
 
@@ -251,10 +250,10 @@ namespace kissearch {
 
                 if (start == 0) {
                     key = s.substr(start, end - start);
-                    start = end + 1;
+                    start = (int)end + 1;
                 } else {
                     type = s.substr(start, end - start);
-                    start = end + 1;
+                    start = (int)end + 1;
                     break;
                 }
             }
@@ -275,22 +274,18 @@ namespace kissearch {
                 e.texts.emplace_back(key, field_text(value));
                 text_field = key;
             }
-            else if (type ==  "w") {
-                auto &field = e.find_field_text(text_field);
-                field.terms.push_back(value);
+            else if (type == "w") {
+                e.find_field_text(text_field).terms.push_back(value);
                 index_field = value;
             }
             else if (type == "c") {
-                auto &field = e.find_field_text(text_field);
-                field.find_index(index_field).count = std::stol(value);
+                e.find_field_text(text_field).find_index(index_field).count = std::stol(value);
             }
             else if (type == "s") {
-                auto &field = e.find_field_text(text_field);
-                field.find_index(index_field).score = std::stof(value);
+                e.find_field_text(text_field).find_index(index_field).score = std::stof(value);
             }
             else if (type == "k") {
-                auto &field = e.find_field_keyword(key);
-                field = field_keyword(value);
+                e.keywords.emplace_back(key, field_keyword(value));
             }
         }
     }
@@ -350,7 +345,7 @@ namespace kissearch {
         std::string tmp_file_name = file_name + ".tmp";
 
         std::ofstream file_tmp(tmp_file_name,std::ofstream::binary);
-        file_tmp.write(data.data(), data.size());
+        file_tmp.write(data.data(), (int)data.size());
         file_tmp.close();
 
         FILE *input = fopen(tmp_file_name.c_str(), "rb");

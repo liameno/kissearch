@@ -94,7 +94,7 @@ int main() {
     std::cout << "Search: " << duration_cast<milliseconds>(end_time - start_time).count() << " ms" << std::endl;
     start_time = high_resolution_clock::now();
 
-    document.save(file_name);
+    //document.save(file_name);
 
     end_time = high_resolution_clock::now();
     std::cout << "Save: " << duration_cast<milliseconds>(end_time - start_time).count() << " ms" << std::endl;

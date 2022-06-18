@@ -54,6 +54,8 @@ namespace kissearch {
         typedef std::pair<std::string, field_text> field_text_t;
         typedef std::pair<std::string, field_keyword> field_keyword_t;
 
+        entry();
+
         std::vector<field_number_t> numbers;
         std::vector<field_text_t> texts;
         std::vector<field_keyword_t> keywords;
@@ -61,6 +63,13 @@ namespace kissearch {
         field_number &find_field_number(const std::string &s);
         field_text &find_field_text(const std::string &s);
         field_keyword &find_field_keyword(const std::string &s);
+
+        __gnu_cxx::__normal_iterator<entry::field_number_t *, std::vector<entry::field_number_t>>
+        find_field_number_it(const std::string &s);
+        __gnu_cxx::__normal_iterator<entry::field_text_t *, std::vector<entry::field_text_t>>
+        find_field_text_it(const std::string &s);
+        __gnu_cxx::__normal_iterator<entry::field_keyword_t *, std::vector<entry::field_keyword_t>>
+        find_field_keyword_it(const std::string &s);
     };
 }
 
