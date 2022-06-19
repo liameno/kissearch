@@ -79,10 +79,11 @@ int main() {
     start_time = high_resolution_clock::now();
 
     document::search_options search_options_number;
-    search_options_number.field_names = { field_name_number };
     document::search_options search_options_text;
-    search_options_text.field_names = { field_name_text };
     document::search_options search_options_keyword;
+
+    search_options_number.field_names = { field_name_number };
+    search_options_text.field_names = { field_name_text };
     search_options_keyword.field_names = { field_name_keyword };
 
     auto n_results = document.number_search(number_query, search_options_number);

@@ -7,8 +7,9 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(ZLIB)
 find_package(Threads)
 
+#TODO: edit
 #/home/---/libs/lib/libkissearch.so - without sudo
-#/usr/local/lib/
+#/usr/local/lib/libkissearch.so
 
 find_package(kissearch REQUIRED)
 add_executable(${PROJECT_NAME} example.cpp)
