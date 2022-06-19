@@ -48,7 +48,9 @@ namespace kissearch {
         ulong cache_idf_size;
         std::mutex mutex;
     private:
-        static void load_parse(const std::string &s, std::string &key, std::string &type, std::string &value);
+        static void write_block(std::stringstream &content, const std::string &type, const std::string &value);
+        static void write_block(std::stringstream &content, const std::string &key, const std::string &type, const std::string &value);
+        static void parse_block(const std::string &s, std::string &key, std::string &type, std::string &value);
     public:
         explicit document(const ulong &cache_idf_size = 512, const double &k = 1.2, const double &b = 0.75);
 

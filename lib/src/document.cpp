@@ -67,7 +67,21 @@ namespace kissearch {
         }
     }
 
-    void document::load_parse(const std::string &s, std::string &key, std::string &type, std::string &value) {
+    void document::write_block(std::stringstream &content, const std::string &type, const std::string &value) {
+        content << type
+                << '/'
+                << value
+                << std::endl;
+    }
+    void document::write_block(std::stringstream &content, const std::string &key, const std::string &type, const std::string &value) {
+        content << key
+                << '/'
+                << type
+                << '/'
+                << value
+                << std::endl;
+    }
+    void document::parse_block(const std::string &s, std::string &key, std::string &type, std::string &value) {
         int start = 0;
 
         while (true) {
@@ -96,7 +110,7 @@ namespace kissearch {
     }
 
     document::document(const ulong &cache_idf_size, const double &k, const double &b) {
-        this->cache_idf_size = cache_idf_size ;
+        this->cache_idf_size = cache_idf_size;
         this->k = k;
         this->b = b;
         clear_cache_idf();
@@ -305,13 +319,15 @@ namespace kissearch {
         std::string s;
         entry e;
 
-        std::string f_key;
-        std::string f_type;
-        std::string f_value;
+        std::string key;
+        std::string type;
+        std::string value;
 
-        load_parse(s, f_key, f_type, f_value);
+        getline(stream, s);
+        parse_block(s, key, type, value);
 
-        if (f_type == "d") name = f_value;
+        auto t = type.front();
+        if (t == 'd') name = value;
 
         std::string text_field;
         std::string index_field;
@@ -323,13 +339,11 @@ namespace kissearch {
                 continue;
             }
 
-            std::string key;
-            std::string type;
-            std::string value;
-
-            load_parse(s, key, type, value);
-
-            auto t = type.front();
+            key.clear();
+            type.clear();
+            value.clear();
+            parse_block(s, key, type, value);
+            t = type.front();
 
             if (t == 'n') {
                 e.numbers.emplace_back(key, field_number(value));
@@ -359,50 +373,24 @@ namespace kissearch {
         }
 
         std::stringstream content;
-        content << "d"
-                << '/'
-                << name
-                << std::endl;
+        write_block(content,  "d", name);
 
         for (auto &entry : entries) {
             for (auto &number : entry.numbers) {
-                content << number.first
-                        << '/'
-                        << "n"
-                        << '/'
-                        << number.second.number
-                        << std::endl;
+                write_block(content, number.first, "n", std::to_string(number.second.number));
             }
             for (auto &text : entry.texts) {
-                content << text.first
-                        << '/'
-                        << "t"
-                        << '/'
-                        << text.second.text
-                        << std::endl;
+                write_block(content, text.first, "t", text.second.text);
 
                 for (auto &term : text.second.terms) {
-                    content << "w"
-                            << '/'
-                            << term
-                            << std::endl;
-                    content << "c"
-                            << '/'
-                            << text.second.find_index(term).count
-                            << std::endl;
-                    content << "s"
-                            << '/'
-                            << text.second.find_index(term).score
-                            << std::endl;
+                    auto &index = text.second.find_index(term);
+                    write_block(content, "w", term);
+                    write_block(content, "c", std::to_string(index.count));
+                    write_block(content, "s", std::to_string(index.score));
                 }
             }
             for (auto &keyword : entry.keywords) {
-                content << keyword.first
-                        << '/'
-                        << "k"
-                        << '/'
-                        << keyword.second.keyword
-                        << std::endl;
+                write_block(content, keyword.first, "k", keyword.second.keyword);
             }
 
             content << ";" << std::endl;

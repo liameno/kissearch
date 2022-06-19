@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <filesystem>
 
-#include "include/document.h"
+#include <kissearch/document.h>
 
 #define reset   "\033[0m"
 #define black    "\033[30m"
@@ -112,7 +112,7 @@ int main() {
 
     start_time = high_resolution_clock::now();
 
-    //document.save(file_name);
+    document.save(file_name);
 
     end_time = high_resolution_clock::now();
     std::cout << reset << "Save: " << cyan << duration_cast<milliseconds>(end_time - start_time).count() << " ms" << std::endl;
