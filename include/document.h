@@ -8,6 +8,8 @@
 #include <cmath>
 #include <algorithm>
 #include <filesystem>
+#include <thread>
+#include <mutex>
 
 #include "entry.h"
 
@@ -16,6 +18,16 @@ namespace kissearch {
     public:
         typedef std::pair<entry&, double> result_t;
         typedef std::pair<std::string, double> cache_idf_t;
+    public:
+        struct search_options {
+            std::vector<std::string> field_names;
+            double min_score;
+            bool sort_by_score;
+            ulong page;
+            ulong page_size;
+
+            search_options();
+        };
     public:
         static std::string get_file_content(const std::string &file_name);
 
@@ -34,6 +46,7 @@ namespace kissearch {
         double k;
         double b;
         ulong cache_idf_size;
+        std::mutex mutex;
     private:
         static void load_parse(const std::string &s, std::string &key, std::string &type, std::string &value);
     public:
@@ -50,9 +63,11 @@ namespace kissearch {
         void clear_cache_idf();
         void index_text_field(const std::string &field_name);
 
-        std::vector<result_t> number_search(const u_long &query, const std::string &field_name);
-        std::vector<result_t> text_search(std::string query, const std::string &field_name, const double &min_score = 0.1, const bool &sort_by_score = true);
-        std::vector<result_t> keyword_search(const std::string &query, const std::string &field_name);
+        static void slice_page(std::vector<result_t> &results, const search_options &options);
+
+        std::vector<result_t> number_search(const u_long &query, const search_options &options);
+        std::vector<result_t> text_search(std::string query, const search_options &options);
+        std::vector<result_t> keyword_search(const std::string &query, const search_options &options);
 
         void add(const entry &e);
 

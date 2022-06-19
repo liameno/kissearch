@@ -16,6 +16,10 @@ namespace kissearch {
         this->number = std::stol(number);
     }
 
+    bool field_number::operator==(const field_number &value) const {
+        return this->number == value.number;
+    }
+
     field_text::field_text() = default;
     field_text::field_text(const std::string &text) {
         this->text = text;
@@ -56,9 +60,17 @@ namespace kissearch {
         return std::find_if(index.begin(), index.end(), lambada);
     }
 
+    bool field_text::operator==(const field_text &value) const {
+        return this->text == value.text;
+    }
+
     field_keyword::field_keyword() = default;
     field_keyword::field_keyword(const std::string &keyword) {
         this->keyword = keyword;
+    }
+
+    bool field_keyword::operator==(const field_keyword &value) const {
+        return this->keyword == value.keyword;
     }
 
     entry::entry() {
@@ -94,5 +106,9 @@ namespace kissearch {
     entry::find_field_keyword_it(const std::string &s) {
         const auto lambada = [&](const field_keyword_t &c) { return c.first == s; };
         return std::find_if(keywords.begin(), keywords.end(), lambada);
+    }
+
+    bool entry::operator ==(const entry &e) const {
+        return this->numbers == e.numbers && this->texts == e.texts && this->keywords == e.keywords;
     }
 }

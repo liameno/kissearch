@@ -19,7 +19,7 @@
 using namespace kissearch;
 using namespace std::chrono;
 
-void load_example(document &document, const std::string &field_number_name, const std::string &field_text_name, const std::string &field_keyword_name) {
+void load_example(document &document, const std::string &field_name_number, const std::string &field_name_text, const std::string &field_name_keyword) {
     std::vector<std::pair<std::string, std::string>> texts = {
             {"The Hilltop algorithm is an algorithm used to find documents relevant to a particular keyword topic in news search", "https://en.wikipedia.org/wiki/Hilltop_algorithm"},
             {"VisualRank is a system for finding and ranking images by analysing and comparing their content, rather than searching image names, Web links or other text", "https://en.wikipedia.org/wiki/VisualRank"},
@@ -34,32 +34,33 @@ void load_example(document &document, const std::string &field_number_name, cons
         for (const auto &text: texts) {
             entry e;
 
-            e.numbers.emplace_back(field_number_name, field_number(document.compute_next_number_value(field_number_name)));
-            e.texts.emplace_back(field_text_name, field_text(text.first));
-            e.keywords.emplace_back(field_keyword_name, field_keyword(text.second));
+            e.numbers.emplace_back(field_name_number, field_number(document.compute_next_number_value(field_name_number)));
+            e.texts.emplace_back(field_name_text, field_text(text.first));
+            e.keywords.emplace_back(field_name_keyword, field_keyword(text.second));
 
             document.add(e);
         }
     }
+
+    document.name = "example";
 }
 
 int main() {
     const std::string file_name          = "../index.db";
-    const std::string field_number_name  = "id";
-    const std::string field_text_name    = "title";
-    const std::string field_keyword_name = "url";
+    const std::string field_name_number  = "id";
+    const std::string field_name_text    = "title";
+    const std::string field_name_keyword = "url";
 
     const ulong       number_query  = 5;
-    const std::string text_query    = "algorithm";
+    const std::string text_query    = "algorithms link";
     const std::string keyword_query = "https://en.wikipedia.org/wiki/Hilltop_algorithm";
 
     document document;
-    document.name = "test";
 
     auto start_time = high_resolution_clock::now();
 
     if (!std::filesystem::exists(file_name)) {
-        load_example(document, field_number_name, field_text_name, field_keyword_name);
+        load_example(document, field_name_number, field_name_text, field_name_keyword);
         std::cout << reset << "From example" << std::endl;
     } else {
         document.load(file_name);
@@ -71,15 +72,22 @@ int main() {
     std::cout << reset << "Size: " << red << document.entries.size() << std::endl;
     start_time = high_resolution_clock::now();
 
-    document.index_text_field(field_text_name);
+    document.index_text_field(field_name_text);
 
     end_time = high_resolution_clock::now();
     std::cout << reset << "Index: " << red << duration_cast<milliseconds>(end_time - start_time).count() << " ms" << std::endl;
     start_time = high_resolution_clock::now();
 
-    auto n_results = document.number_search(number_query, field_number_name);
-    auto t_results = document.text_search(text_query, field_text_name);
-    auto k_results = document.keyword_search(keyword_query, field_keyword_name);
+    document::search_options search_options_number;
+    search_options_number.field_names = { field_name_number };
+    document::search_options search_options_text;
+    search_options_text.field_names = { field_name_text };
+    document::search_options search_options_keyword;
+    search_options_keyword.field_names = { field_name_keyword };
+
+    auto n_results = document.number_search(number_query, search_options_number);
+    auto t_results = document.text_search(text_query, search_options_text);
+    auto k_results = document.keyword_search(keyword_query, search_options_keyword);
 
     end_time = high_resolution_clock::now();
     std::cout << reset << "Search: " << red << duration_cast<milliseconds>(end_time - start_time).count() << " ms" << std::endl;
@@ -88,24 +96,23 @@ int main() {
     std::cout << reset << "Found Texts: " << green << t_results.size() << std::endl;
     std::cout << reset << "Found Keywords: " << green << k_results.size() << std::endl;
 
-    document::sort_text_results(t_results);
-
     /*for (auto &result : n_results) {
-        auto &field = result.first.find_field_number(field_number_name);
+        auto &field = result.first.find_field_number(field_name_number);
         std::cout << reset << field.number << green << " (score: " << result.second << ")" << std::endl;
-    }
-    for (auto &result : t_results) {
-        auto &field = result.first.find_field_text(field_text_name);
-        std::cout << reset << field.text << green << " (score: " << result.second << ")" << std::endl;
-    }
-    for (auto &result : k_results) {
-        auto &field = result.first.find_field_keyword(field_keyword_name);
+    }*/
+    /*for (auto &result : t_results) {
+        auto &field_id = result.first.find_field_number(field_name_number);
+        auto &field = result.first.find_field_text(field_name_text);
+        std::cout << magenta << field_id.number << reset << " - " << reset << field.text << green << " (score: " << result.second << ")" << std::endl;
+    }*/
+    /*for (auto &result : k_results) {
+        auto &field = result.first.find_field_keyword(field_name_keyword);
         std::cout << reset << field.keyword << green << " (score: " << result.second << ")" << std::endl;
     }*/
 
     start_time = high_resolution_clock::now();
 
-    document.save(file_name);
+    //document.save(file_name);
 
     end_time = high_resolution_clock::now();
     std::cout << reset << "Save: " << cyan << duration_cast<milliseconds>(end_time - start_time).count() << " ms" << std::endl;

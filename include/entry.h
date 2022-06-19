@@ -27,6 +27,8 @@ namespace kissearch {
         field_number();
         explicit field_number(const size_t &number);
         explicit field_number(const std::string &number);
+
+        bool operator==(const field_number &value) const;
     };
     struct field_text {
         typedef std::pair<std::string, term_info> index_t;
@@ -45,12 +47,16 @@ namespace kissearch {
         find_term_it(const std::string &s);
         __gnu_cxx::__normal_iterator<field_text::index_t *, std::vector<field_text::index_t>>
         find_index_it(const std::string &s);
+
+        bool operator==(const field_text &value) const;
     };
     struct field_keyword {
         std::string keyword;
 
         field_keyword();
         explicit field_keyword(const std::string &keyword);
+
+        bool operator==(const field_keyword &value) const;
     };
 
     struct entry {
@@ -74,6 +80,10 @@ namespace kissearch {
         find_field_text_it(const std::string &s);
         __gnu_cxx::__normal_iterator<entry::field_keyword_t *, std::vector<entry::field_keyword_t>>
         find_field_keyword_it(const std::string &s);
+
+        static bool compare_vectors(std::vector<field_text_t> &l, std::vector<field_text_t> &r);
+
+        bool operator ==(const entry &e) const;
     };
 }
 

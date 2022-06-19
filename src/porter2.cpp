@@ -51,7 +51,7 @@ namespace porter2 {
             const static auto suffixes_size = 9;
 
             for (int i = 0; i < suffixes_size; ++i) {
-                if (ends_with(s, suffixes[i])) {
+                if (s.back() == suffixes[i].back() && ends_with(s, suffixes[i])) {
                     return true;
                 }
             }
@@ -116,13 +116,13 @@ namespace porter2 {
             };
 
             for (const auto &special_word: special_words) {
-                if (s == special_word.first) {
+                if (s.front() == special_word.first.front() && s == special_word.first) {
                     s = special_word.second;
                     return true;
                 }
             }
             for (const auto &special_word: special_words2) {
-                if (s == special_word) {
+                if (s.front() == special_word.front() && s == special_word) {
                     return true;
                 }
             }
@@ -142,7 +142,7 @@ namespace porter2 {
             };
 
             for (const auto &special_word: special_words) {
-                if (s == special_word) {
+                if (s.front() == special_word.front() && s == special_word) {
                     return true;
                 }
             }
@@ -157,7 +157,7 @@ namespace porter2 {
             };
 
             for (const auto &special_word: special_words) {
-                if (starts_with(word, special_word)) {
+                if (word.front() == special_word.front() && starts_with(word, special_word)) {
                     return (int)special_word.length();
                 }
             }
@@ -172,7 +172,7 @@ namespace porter2 {
             const static auto words_size = 173;
 
             for (short i = 0; i < words_size; ++i) {
-                if (s == words[i]) {
+                if (s.front() == words[i].front() && s == words[i]) {
                     return true;
                 }
             }
@@ -293,7 +293,7 @@ namespace porter2 {
             const static auto suffixes_size = 22;
 
              for (short i = 0; i < suffixes_size; ++i) {
-                if (replace_end(word, r1, suffixes[i], suffixes2[i])) {
+                if (word.back() == suffixes[i].back() && replace_end(word, r1, suffixes[i], suffixes2[i])) {
                     return;
                 }
             }
@@ -338,7 +338,7 @@ namespace porter2 {
             const static auto suffixes_size = 8;
 
             for (short i = 0; i < suffixes_size; ++i) {
-                if (replace_end(word, r1, suffixes[i], suffixes2[i])) {
+                if (word.back() == suffixes[i].back() && replace_end(word, r1, suffixes[i], suffixes2[i])) {
                     return;
                 }
             }
@@ -368,7 +368,7 @@ namespace porter2 {
             const static auto suffixes_size = 16;
 
             for (short i = 0; i < suffixes_size; ++i) {
-                if (replace_end(word, r2, suffixes[i])) {
+                if (word.back() == suffixes[i].back() && replace_end(word, r2, suffixes[i])) {
                     return;
                 }
             }
