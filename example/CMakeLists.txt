@@ -11,6 +11,5 @@ find_package(Threads)
 #/home/---/libs/lib/libkissearch.so - without sudo
 #/usr/local/lib/libkissearch.so
 
-find_package(kissearch REQUIRED)
 add_executable(${PROJECT_NAME} example.cpp)
 target_link_libraries(${PROJECT_NAME} z Threads::Threads /usr/local/lib/libkissearch.so)
