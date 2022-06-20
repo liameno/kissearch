@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <filesystem>
 
-#include <kissearch/document.h>
+#include "../lib/include/document.h"
 
 #define reset   "\033[0m"
 #define black    "\033[30m"
@@ -34,9 +34,9 @@ void load_example(document &document, const std::string &field_name_number, cons
         for (const auto &text: texts) {
             entry e;
 
-            e.numbers.emplace_back(field_name_number, field_number(document.compute_next_number_value(field_name_number)));
-            e.texts.emplace_back(field_name_text, field_text(text.first));
-            e.keywords.emplace_back(field_name_keyword, field_keyword(text.second));
+            field f_n; f_n.val._number = std::make_shared<field::number>(document.compute_next_number_value(field_name_number));
+            field f_t; f_t.val._text = std::make_shared<field::text>(text.first);
+            field f_k; f_k.val._keyword = std::make_shared<field::keyword>(text.second);
 
             document.add(e);
         }
@@ -51,7 +51,7 @@ int main() {
     const std::string field_name_text    = "title";
     const std::string field_name_keyword = "url";
 
-    const ulong       number_query  = 5;
+    const std::string number_query  = "5";
     const std::string text_query    = "algorithms link";
     const std::string keyword_query = "https://en.wikipedia.org/wiki/Hilltop_algorithm";
 
@@ -86,9 +86,9 @@ int main() {
     search_options_text.field_names = { field_name_text };
     search_options_keyword.field_names = { field_name_keyword };
 
-    auto n_results = document.number_search(number_query, search_options_number);
-    auto t_results = document.text_search(text_query, search_options_text);
-    auto k_results = document.keyword_search(keyword_query, search_options_keyword);
+    auto n_results = document.search(number_query, search_options_number);
+    auto t_results = document.search(text_query, search_options_text);
+    auto k_results = document.search(keyword_query, search_options_keyword);
 
     end_time = high_resolution_clock::now();
     std::cout << reset << "Search: " << red << duration_cast<milliseconds>(end_time - start_time).count() << " ms" << std::endl;
@@ -98,22 +98,22 @@ int main() {
     std::cout << reset << "Found Keywords: " << green << k_results.size() << std::endl;
 
     /*for (auto &result : n_results) {
-        auto &field = result.first.find_field_number(field_name_number);
-        std::cout << reset << field.number << green << " (score: " << result.second << ")" << std::endl;
+        auto &field = result.first.find_field(field_name_number);
+        std::cout << reset << field._number->value << green << " (score: " << result.second << ")" << std::endl;
     }*/
-    /*for (auto &result : t_results) {
-        auto &field_id = result.first.find_field_number(field_name_number);
-        auto &field = result.first.find_field_text(field_name_text);
-        std::cout << magenta << field_id.number << reset << " - " << reset << field.text << green << " (score: " << result.second << ")" << std::endl;
-    }*/
+    for (auto &result : t_results) {
+        auto &field_id = result.first.find_field(field_name_number);
+        auto &field = result.first.find_field(field_name_text);
+        std::cout << magenta << field_id._number->value << reset << " - " << reset << field._text->value << green << " (score: " << result.second << ")" << std::endl;
+    }
     /*for (auto &result : k_results) {
-        auto &field = result.first.find_field_keyword(field_name_keyword);
-        std::cout << reset << field.keyword << green << " (score: " << result.second << ")" << std::endl;
+        auto &field = result.first.find_field(field_name_keyword);
+        std::cout << reset << field._keyword->value << green << " (score: " << result.second << ")" << std::endl;
     }*/
 
     start_time = high_resolution_clock::now();
 
-    document.save(file_name);
+    //document.save(file_name);
 
     end_time = high_resolution_clock::now();
     std::cout << reset << "Save: " << cyan << duration_cast<milliseconds>(end_time - start_time).count() << " ms" << std::endl;

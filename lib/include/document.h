@@ -16,12 +16,12 @@
 namespace kissearch {
     struct document {
     public:
+        typedef std::pair<std::string, std::string> field_t;
         typedef std::pair<entry&, double> result_t;
         typedef std::pair<std::string, double> cache_idf_t;
     public:
         struct search_options {
             std::vector<std::string> field_names;
-            double min_score;
             bool sort_by_score;
             ulong page;
             ulong page_size;
@@ -32,15 +32,16 @@ namespace kissearch {
         static std::string get_file_content(const std::string &file_name);
 
         static void normalize(std::string &s);
-        static std::vector<std::string> tokenize(std::string &text);
+        static std::vector<std::string> tokenize(const std::string &text);
         static void stem(std::vector<std::string> &terms);
 
-        static void tokenize(field_text &field);
-        static void stem(field_text &field);
+        static void tokenize(field::value &field);
+        static void stem(field::value &field);
         static void sort_text_results(std::vector<result_t> &results);
     public:
         std::string name;
         std::vector<entry> entries;
+        std::vector<field_t> fields;
         std::vector<cache_idf_t> cache_idf;
     private:
         double k;
@@ -55,9 +56,9 @@ namespace kissearch {
         explicit document(const ulong &cache_idf_size = 512, const double &k = 1.2, const double &b = 0.75);
 
         ulong compute_document_length_in_words(const std::string &field_name);
-        double compute_tf(entry &e, const std::string &term, field_text &field);
+        double compute_tf(entry &e, const std::string &term, field::value &field);
         double compute_idf(entry &e, const std::string &term, const std::string &field_name);
-        double compute_bm25(entry &e, const std::string &term, field_text &field, const std::string &field_name, const ulong &document_length_in_words);
+        double compute_bm25(entry &e, const std::string &term, field::value &field, const std::string &field_name, const ulong &document_length_in_words);
 
         //ID
         ulong compute_next_number_value(const std::string &field_name);
@@ -67,9 +68,7 @@ namespace kissearch {
 
         static void slice_page(std::vector<result_t> &results, const search_options &options);
 
-        std::vector<result_t> number_search(const u_long &query, const search_options &options);
-        std::vector<result_t> text_search(std::string query, const search_options &options);
-        std::vector<result_t> keyword_search(const std::string &query, const search_options &options);
+        std::vector<result_t> search(const std::string& query, const search_options &options);
 
         void add(const entry &e);
 

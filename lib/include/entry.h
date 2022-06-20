@@ -11,7 +11,7 @@
 
 #define INIT_TERMS_SIZE 30
 #define INIT_INDEX_SIZE 20
-#define INIT_FIELDS_SIZE 1
+#define INIT_FIELDS_SIZE 4
 
 namespace kissearch {
     struct term_info {
@@ -21,67 +21,86 @@ namespace kissearch {
         term_info();
     };
 
-    struct field_number {
-        ulong number;
+    struct field {
+        struct number {
+            ulong value;
 
-        field_number();
-        explicit field_number(const size_t &number);
-        explicit field_number(const std::string &number);
+            number();
+            explicit number(const size_t &number);
+            explicit number(const std::string &number);
 
-        bool operator==(const field_number &value) const;
-    };
-    struct field_text {
-        typedef std::pair<std::string, term_info> index_t;
+            bool operator==(const number &v) const;
+            bool operator==(const ulong &v) const;
+            bool operator==(const std::string &v) const;
+        };
+        struct text {
+            typedef std::pair<std::string, term_info> index_t;
 
-        std::string text;
-        std::vector<std::string> terms;
-        std::vector<index_t> index;
+            std::string value;
+            std::vector<std::string> terms;
+            std::vector<index_t> index;
 
-        field_text();
-        explicit field_text(const std::string &text);
+            text();
+            explicit text(const std::string &text);
 
-        std::string &find_term(const std::string &s);
-        term_info &find_index(const std::string &s);
+            std::string &find_term(const std::string &s);
+            term_info &find_index(const std::string &s);
 
-        __gnu_cxx::__normal_iterator<std::basic_string<char> *, std::vector<std::basic_string<char>>>
-        find_term_it(const std::string &s);
-        __gnu_cxx::__normal_iterator<field_text::index_t *, std::vector<field_text::index_t>>
-        find_index_it(const std::string &s);
+            __gnu_cxx::__normal_iterator<std::basic_string<char> *, std::vector<std::basic_string<char>>>
+            find_term_it(const std::string &s);
+            __gnu_cxx::__normal_iterator<index_t *, std::vector<index_t>>
+            find_index_it(const std::string &s);
 
-        bool operator==(const field_text &value) const;
-    };
-    struct field_keyword {
-        std::string keyword;
+            bool operator==(const text &v) const;
+            bool operator==(const std::string &v) const;
+        };
+        struct keyword {
+            std::string value;
 
-        field_keyword();
-        explicit field_keyword(const std::string &keyword);
+            keyword();
+            explicit keyword(const std::string &keyword);
 
-        bool operator==(const field_keyword &value) const;
+            bool operator==(const keyword &v) const;
+            bool operator==(const std::string &v) const;
+        };
+        struct boolean {
+            bool value;
+
+            boolean();
+            explicit boolean(const bool &boolean);
+            explicit boolean(const std::string &boolean);
+
+            bool operator==(const boolean &v) const;
+            bool operator==(const bool &v) const;
+            bool operator==(const std::string &v) const;
+        };
+
+        struct value {
+            std::shared_ptr<number> _number;
+            std::shared_ptr<text> _text;
+            std::shared_ptr<keyword> _keyword;
+            std::shared_ptr<boolean> _boolean;
+
+            bool is_number() const { return _number != nullptr; }
+            bool is_text() const { return _text != nullptr; }
+            bool is_keyword() const { return _keyword != nullptr; }
+            bool is_boolean() const { return _boolean != nullptr; }
+        };
+
+        std::string name;
+        value val;
+
+        std::string val_s();
+
+        bool operator==(const field &f) const;
     };
 
     struct entry {
-        typedef std::pair<std::string, field_number> field_number_t;
-        typedef std::pair<std::string, field_text> field_text_t;
-        typedef std::pair<std::string, field_keyword> field_keyword_t;
-
         entry();
 
-        std::vector<field_number_t> numbers;
-        std::vector<field_text_t> texts;
-        std::vector<field_keyword_t> keywords;
+        std::vector<field> fields;
 
-        field_number &find_field_number(const std::string &s);
-        field_text &find_field_text(const std::string &s);
-        field_keyword &find_field_keyword(const std::string &s);
-
-        __gnu_cxx::__normal_iterator<entry::field_number_t *, std::vector<entry::field_number_t>>
-        find_field_number_it(const std::string &s);
-        __gnu_cxx::__normal_iterator<entry::field_text_t *, std::vector<entry::field_text_t>>
-        find_field_text_it(const std::string &s);
-        __gnu_cxx::__normal_iterator<entry::field_keyword_t *, std::vector<entry::field_keyword_t>>
-        find_field_keyword_it(const std::string &s);
-
-        static bool compare_vectors(std::vector<field_text_t> &l, std::vector<field_text_t> &r);
+        field::value &find_field(const std::string &name);
 
         bool operator ==(const entry &e) const;
     };

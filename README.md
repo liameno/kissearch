@@ -7,20 +7,40 @@ A fast fulltext search engine
 - Index
 - Porter2 Stemmer (English)
 - Tokenizer
-- Text/Keyword/Number fields
 - Load/Save index from file/memory
 - Compression(when saving)
-## Build/Install
+### Fields
+- Number
+- Text
+- Keyword
+- Boolean
+## Lib
+### Build/Install
 ```shell
 cd lib && mkdir build && cd build && cmake .. && make && sudo make install
 ```
-## CMake
+### CMake
 ```cmake
 target_link_libraries(${PROJECT_NAME} /usr/local/lib/libkissearch.so)
 ```
-## Example
+### Example
 ```shell
 example/
+```
+## Server
+### Build
+```shell
+cd server && mkdir build && cd build && cmake .. && make
+```
+### Start
+```shell
+./server
+```
+### Use
+```shell
+curl -XPOST 0.0.0.0:8080/document/x -d '{"a":"text"}'
+curl -XPOST 0.0.0.0:8080/document/x/add -d '{"a":"example"}'
+curl -XPOST 0.0.0.0:8080/document/x/search -d '{"q":"example","field_names":"a"}'
 ```
 ## License
 GNU Affero General Public License v3.0

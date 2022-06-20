@@ -5,7 +5,6 @@
 
 namespace kissearch {
     document::search_options::search_options() {
-        this->min_score = 0.1;
         this->sort_by_score = true;
         this->page = 1;
         this->page_size = 10;
@@ -27,7 +26,7 @@ namespace kissearch {
         to_lower(s);
         remove_special_chars(s);
     }
-    std::vector<std::string> document::tokenize(std::string &text) {
+    std::vector<std::string> document::tokenize(const std::string &text) {
         auto terms = split(text, " ");
 
         for (auto &s : terms) {
@@ -37,15 +36,15 @@ namespace kissearch {
         return terms;
     }
     void document::stem(std::vector<std::string> &terms) {
-        static auto lambada = [](std::string &term) { return !porter2::english::stem(term); };
-        terms.erase(std::remove_if(terms.begin(), terms.end(), lambada), terms.end());
+        static auto lambda = [](std::string &term) { return !porter2::english::stem(term); };
+        terms.erase(std::remove_if(terms.begin(), terms.end(), lambda), terms.end());
     }
-    void document::tokenize(field_text &field) {
-        field.terms = tokenize(field.text);
+    void document::tokenize(field::value &field) {
+        field._text->terms = tokenize(field._text->value);
     }
-    void document::stem(field_text &field) {
-        static auto lambada = [](std::string &term) { return !porter2::english::stem(term); };
-        field.terms.erase(std::remove_if(field.terms.begin(), field.terms.end(), lambada), field.terms.end());
+    void document::stem(field::value &field) {
+        static auto lambda = [](std::string &term) { return !porter2::english::stem(term); };
+        field._text->terms.erase(std::remove_if(field._text->terms.begin(), field._text->terms.end(), lambda), field._text->terms.end());
     }
     void document::sort_text_results(std::vector<result_t> &results) {
         auto results_size = results.size();
@@ -120,19 +119,19 @@ namespace kissearch {
         ulong size = 0;
 
         for (auto &entry : entries) {
-            auto &field = entry.find_field_text(field_name);
-            size += field.terms.size();
+            auto &field = entry.find_field(field_name);
+            size += field._text->terms.size();
         }
 
         return size;
     }
-    double document::compute_tf(entry &e, const std::string &term, field_text &field) {
+    double document::compute_tf(entry &e, const std::string &term, field::value &field) {
         auto score = 0;
 
-        for (auto &word: field.terms) {
-            field.find_index(word).count = 0;
+        for (auto &word: field._text->terms) {
+            field._text->find_index(word).count = 0;
         }
-        for (auto &w : field.terms) {
+        for (auto &w : field._text->terms) {
             if (term == w) {
                 score++;
             }
@@ -141,17 +140,17 @@ namespace kissearch {
         return score;
     }
     double document::compute_idf(entry &e, const std::string &term, const std::string &field_name) {
-        const static auto lambada = [&](const std::pair<std::string, double> &c) { return c.first == term; };
-        auto found_cache = std::find_if(cache_idf.begin(), cache_idf.end(), lambada);
+        const static auto lambda = [&](const std::pair<std::string, double> &c) { return c.first == term; };
+        auto found_cache = std::find_if(cache_idf.begin(), cache_idf.end(), lambda);
         if (found_cache != cache_idf.end()) return found_cache->second;
 
         const auto size = entries.size();
         ulong found_size = 0;
 
         for (auto &entry2: entries) {
-            auto &field = entry2.find_field_text(field_name);
+            auto &field = entry2.find_field(field_name);
 
-            if (field.find_term_it(term) != field.terms.end()) {
+            if (field._text->find_term_it(term) != field._text->terms.end()) {
                 ++found_size;
             }
         }
@@ -160,9 +159,9 @@ namespace kissearch {
         cache_idf.emplace_back(term, idf);
         return idf;
     }
-    double document::compute_bm25(entry &e, const std::string &term, field_text &field, const std::string &field_name, const ulong &document_length_in_words) {
+    double document::compute_bm25(entry &e, const std::string &term, field::value &field, const std::string &field_name, const ulong &document_length_in_words) {
         auto entries_size = (double)entries.size();
-        auto field_size = (double)field.terms.size();
+        auto field_size = (double)field._text->terms.size();
 
         auto tf = compute_tf(e, term, field);
         auto idf = compute_idf(e, term, field_name);
@@ -173,7 +172,7 @@ namespace kissearch {
 
     ulong document::compute_next_number_value(const std::string &field_name) {
         if (entries.empty()) return 1;
-        return entries.back().find_field_number(field_name).number + 1;
+        return entries.back().find_field(field_name)._number->value + 1;
     }
 
     void document::clear_cache_idf() {
@@ -185,7 +184,7 @@ namespace kissearch {
 
         //tokenize, stem
         for (auto &entry : entries) {
-            auto &field = entry.find_field_text(field_name);
+            auto &field = entry.find_field(field_name);
 
             tokenize(field);
             stem(field);
@@ -195,10 +194,10 @@ namespace kissearch {
 
         //score
         for (auto &entry : entries) {
-            auto &field = entry.find_field_text(field_name);
+            auto &field = entry.find_field(field_name);
 
-            for (const auto &term : field.terms) {
-                field.find_index(term).score = compute_bm25(entry, term, field, field_name, document_length_in_words);
+            for (const auto &term : field._text->terms) {
+                field._text->find_index(term).score = compute_bm25(entry, term, field, field_name, document_length_in_words);
             }
         }
         mutex.unlock();
@@ -220,31 +219,7 @@ namespace kissearch {
         results = results_tmp;
     }
 
-    std::vector<document::result_t> document::number_search(const ulong &query, const search_options &options) {
-        const auto page_size_max = options.page * options.page_size;
-
-        std::vector<result_t> results;
-
-        for (const auto &field_name : options.field_names) {
-            for (auto &entry: entries) {
-                if (results.size() >= page_size_max) break;
-
-                auto &field = entry.find_field_number(field_name);
-                double score = 0;
-
-                if (field.number == query) {
-                    score = 1;
-                }
-
-                if (score < options.min_score) continue;
-                results.emplace_back(entry, score);
-            }
-        }
-
-        slice_page(results, options);
-        return results;
-    }
-    std::vector<document::result_t> document::text_search(std::string query, const search_options &options) {
+    std::vector<document::result_t> document::search(const std::string &query, const search_options &options) {
         const auto page_size_max = options.page * options.page_size;
 
         auto terms = tokenize(query);
@@ -256,21 +231,36 @@ namespace kissearch {
             for (auto &entry: entries) {
                 if (results.size() >= page_size_max) break;
 
-                auto &field = entry.find_field_text(field_name);
+                auto &field = entry.find_field(field_name);
                 double score = 0;
 
-                for (auto &term: terms) {
-                    auto found = field.find_index_it(term);
+                if (field.is_number()) {
+                    if (field._number->operator==(std::stol(query))) {
+                        score = 1;
+                    }
+                }
+                else if (field.is_text()) {
+                    for (auto &term: terms) {
+                        auto found = field._text->find_index_it(term);
 
-                    if (found != field.index.end()) {
-                        score += found->second.score;
+                        if (found != field._text->index.end()) {
+                            score += found->second.score;
+                        }
+                    }
+                }
+                else if (field.is_keyword()) {
+                    if (field._keyword->operator==(query)) {
+                        score = 1;
+                    }
+                }
+                else if (field.is_boolean()) {
+                    if (field._boolean->operator==(query)) {
+                        score = 1;
                     }
                 }
 
-                if (score < options.min_score) continue;
-
-                const auto lambada = [&](const result_t &c) { return c.first == entry; };
-                auto found = std::find_if(results.begin(), results.end(), lambada);
+                const auto lambda = [&](const result_t &c) { return c.first == entry; };
+                auto found = std::find_if(results.begin(), results.end(), lambda);
 
                 if (found != results.end()) found->second += score;
                 else results.emplace_back(entry, score);
@@ -279,26 +269,6 @@ namespace kissearch {
 
         slice_page(results, options);
         if (options.sort_by_score) sort_text_results(results);
-        return results;
-    }
-    std::vector<document::result_t> document::keyword_search(const std::string &query, const search_options &options) {
-        const auto page_size_max = options.page * options.page_size;
-
-        std::vector<result_t> results;
-
-        for (const auto &field_name : options.field_names) {
-            for (auto &entry: entries) {
-                if (results.size() >= page_size_max) break;
-
-                auto &field = entry.find_field_keyword(field_name);
-
-                if (field.keyword == query) {
-                    results.emplace_back(entry, 1);
-                }
-            }
-        }
-
-        slice_page(results, options);
         return results;
     }
 
@@ -346,24 +316,35 @@ namespace kissearch {
             t = type.front();
 
             if (t == 'n') {
-                e.numbers.emplace_back(key, field_number(value));
+                field f {key};
+                f.val._number = std::make_shared<field::number>(value);
+                e.fields.push_back(f);
             }
             else if (t == 't') {
-                e.texts.emplace_back(key, field_text(value));
+                field f {key};
+                f.val._text = std::make_shared<field::text>(value);
+                e.fields.push_back(f);
                 text_field = key;
             }
             else if (t == 'w') {
-                e.find_field_text(text_field).terms.push_back(value);
+                e.find_field(text_field)._text->terms.push_back(value);
                 index_field = value;
             }
             else if (t == 'c') {
-                e.find_field_text(text_field).find_index(index_field).count = std::stol(value);
+                e.find_field(text_field)._text->find_index(index_field).count = std::stol(value);
             }
             else if (t == 's') {
-                e.find_field_text(text_field).find_index(index_field).score = std::stof(value);
+                e.find_field(text_field)._text->find_index(index_field).score = std::stod(value);
             }
             else if (t == 'k') {
-                e.keywords.emplace_back(key, field_keyword(value));
+                field f {key};
+                f.val._keyword = std::make_shared<field::keyword>(value);
+                e.fields.push_back(f);
+            }
+            else if (t == 'b') {
+                field f {key};
+                f.val._boolean = std::make_shared<field::boolean>(value);
+                e.fields.push_back(f);
             }
         }
     }
@@ -376,21 +357,37 @@ namespace kissearch {
         write_block(content,  "d", name);
 
         for (auto &entry : entries) {
-            for (auto &number : entry.numbers) {
-                write_block(content, number.first, "n", std::to_string(number.second.number));
-            }
-            for (auto &text : entry.texts) {
-                write_block(content, text.first, "t", text.second.text);
+            for (auto &f : entry.fields) {
+                std::string type;
+                std::string value;
 
-                for (auto &term : text.second.terms) {
-                    auto &index = text.second.find_index(term);
-                    write_block(content, "w", term);
-                    write_block(content, "c", std::to_string(index.count));
-                    write_block(content, "s", std::to_string(index.score));
+                if (f.val.is_number()) {
+                    value = std::to_string(f.val._number->value);
+                    type = "n";
                 }
-            }
-            for (auto &keyword : entry.keywords) {
-                write_block(content, keyword.first, "k", keyword.second.keyword);
+                else if (f.val.is_text()) {
+                    value = f.val._text->value;
+                    type = "t";
+                }
+                else if (f.val.is_keyword()) {
+                    value = f.val._keyword->value;
+                    type = "k";
+                }
+                else if (f.val.is_boolean()) {
+                    value = std::to_string(f.val._boolean->value);
+                    type = "b";
+                }
+
+                write_block(content, f.name, type, value);
+
+                if (type == "t") {
+                    for (auto &term : f.val._text->terms) {
+                        auto &index = f.val._text->find_index(term);
+                        write_block(content, "w", term);
+                        write_block(content, "c", std::to_string(index.count));
+                        write_block(content, "s", std::to_string(index.score));
+                    }
+                }
             }
 
             content << ";" << std::endl;
