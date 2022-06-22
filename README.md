@@ -5,7 +5,7 @@ A fast fulltext search engine
 - BM25
 - Cache
 - Index
-- Porter2 Stemmer (English)
+- Porter2 Stemmer
 - Tokenizer
 - Load/Save index from file/memory
 - Compression(when saving)
@@ -63,8 +63,10 @@ cd server && mkdir build && cd build && cmake .. && make
 ```
 ### Use
 ```shell
+curl -XGET 0.0.0.0:8080/document/x -d
 curl -XPOST 0.0.0.0:8080/document/x -d '{"a":"text"}'
 curl -XPOST 0.0.0.0:8080/document/x/add -d '{"a":"example"}'
+curl -XPOST 0.0.0.0:8080/document/x/delete -d '{"q":"example","field_names":"a"}'
 curl -XPOST 0.0.0.0:8080/document/x/search -d '{"q":"example","field_names":"a"}'
 ```
 ## License
