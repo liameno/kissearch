@@ -10,30 +10,60 @@ using namespace httplib;
 using namespace nlohmann;
 using namespace kissearch;
 
+typedef std::shared_ptr<document> document_t;
+
 #define lambda_args const Request &req, Response &res
+#define already_exists_document() { response["status"] = "error";\
+                            response["message"] = "Already Exists";\
+                            res.status = 404;\
+                            res.set_content(response.dump(), "application/json");\
+                            return; }
+#define not_found_document() { response["status"] = "error";\
+                            response["message"] = "Not Found";\
+                            res.status = 404;\
+                            res.set_content(response.dump(), "application/json");\
+                            return; }
+#define not_found_field() { response["status"] = "error";\
+                        response["message"] = "Not Found Field";\
+                        res.status = 500;\
+                        res.set_content(response.dump(), "application/json");\
+                        return; }
+
+inline auto parse_search_options(const json &params) {
+    document::search_options options;
+
+    for (auto &param : params.items()) {
+        const auto &key = param.key();
+        const auto &value = param.value();
+
+        if (key == "field_names") {
+            options.field_names = split(value, ",");
+        } else if (key == "sort_by_score") {
+            options.sort_by_score = (value == "1" || value == "true");
+        } else if (key == "page") {
+            options.page = value;
+        } else if (key == "page_size") {
+            options.page_size = value;
+        }
+    }
+
+    return options;
+}
+inline auto find_document(const std::string &name, const std::vector<document_t> &documents) {
+    const auto lambda = [&](const document_t &c) { return c->name == name; };
+    return std::find_if(documents.begin(), documents.end(), lambda);
+}
 
 int main() {
     Server server;
-
-    typedef std::shared_ptr<document> document_t;
     std::vector<document_t> documents;
 
     server.Get("/document/(\\w*)", [&](lambda_args) {
-        auto name = req.matches[1];
-
-        const auto lambda = [&](const document_t &c) { return c->name == name; };
-        auto found = std::find_if(documents.begin(), documents.end(), lambda);
-
+        auto &name = req.matches[1];
+        auto found = find_document(name, documents);
         json response;
 
-        if (found == documents.end()) {
-            response["status"] = "error";
-            response["message"] = "Not Found";
-            res.status = 404;
-            res.set_content(response.dump(), "application/json");
-            return;
-        }
-
+        if (found == documents.end()) not_found_document()
         auto doc = found->get();
 
         response["status"] = "ok";
@@ -52,21 +82,11 @@ int main() {
         res.set_content(response.dump(), "application/json");
     });
     server.Post("/document/(\\w*)", [&](lambda_args) {
-        auto name = req.matches[1];
-
-        const auto lambda = [&](const document_t &c) { return c->name == name; };
-        auto found = std::find_if(documents.begin(), documents.end(), lambda);
-
+        auto &name = req.matches[1];
+        auto found = find_document(name, documents);
         json response;
 
-        if (found != documents.end()) {
-            response["status"] = "error";
-            response["message"] = "Already exists";
-            res.status = 500;
-            res.set_content(response.dump(), "application/json");
-            return;
-        }
-
+        if (found != documents.end()) already_exists_document()
         auto params = json::parse(req.body);
 
         ulong cache_idf_size = 512;
@@ -92,21 +112,11 @@ int main() {
         res.set_content(response.dump(), "application/json");
     });
     server.Post("/document/(\\w*)/add", [&](lambda_args) {
-        auto name = req.matches[1];
-
-        const auto lambda = [&](const document_t &c) { return c->name == name; };
-        auto found = std::find_if(documents.begin(), documents.end(), lambda);
-
+        auto &name = req.matches[1];
+        auto found = find_document(name, documents);
         json response;
 
-        if (found == documents.end()) {
-            response["status"] = "error";
-            response["message"] = "Not Found";
-            res.status = 404;
-            res.set_content(response.dump(), "application/json");
-            return;
-        }
-
+        if (found == documents.end()) not_found_document()
         auto doc = found->get();
 
         auto &fields = doc->fields;
@@ -122,13 +132,7 @@ int main() {
             const auto lambda2 = [&](const document::field_t &c) { return c.first == key; };
             auto found2 = std::find_if(fields.begin(), fields.end(), lambda2);
 
-            if (found2 == fields.end()) {
-                response["status"] = "error";
-                response["message"] = "Not Found Field";
-                res.status = 500;
-                res.set_content(response.dump(), "application/json");
-                return;
-            }
+            if (found2 == fields.end()) not_found_field();
 
             field f;
             f.name = key;
@@ -168,40 +172,40 @@ int main() {
 
         res.set_content(response.dump(), "application/json");
     });
-    server.Post("/document/(\\w*)/search", [&](lambda_args) {
-        auto name = req.matches[1];
-
-        const auto lambda = [&](const document_t &c) { return c->name == name; };
-        auto found = std::find_if(documents.begin(), documents.end(), lambda);
-
+    server.Post("/document/(\\w*)/delete", [&](lambda_args) {
+        auto &name = req.matches[1];
+        auto found = find_document(name, documents);
         json response;
 
-        if (found == documents.end()) {
-            response["status"] = "error";
-            response["message"] = "Not Found";
-            res.status = 404;
-            res.set_content(response.dump(), "application/json");
-            return;
-        }
-
+        if (found == documents.end()) not_found_document()
         auto doc = found->get();
-        document::search_options options;
         auto params = json::parse(req.body);
+        auto options = parse_search_options(params);
+        options.sort_by_score = false;
 
-        for (auto &param : params.items()) {
-            const auto &key = param.key();
-            const auto &value = param.value();
+        auto results = doc->search((std::string)params["q"], options, true);
 
-            if (key == "field_names") {
-                options.field_names = split(value, ",");
-            } else if (key == "sort_by_score") {
-                options.sort_by_score = (value == "1" || value == "true");
-            } else if (key == "page") {
-                options.page = value;
-            } else if (key == "page_size") {
-                options.page_size = value;
-            }
-        }
+        const auto lambda = [&](const entry &e) {
+            for (const auto &result : results) if (result.first == e)  return true;
+            return false;
+        };
+        doc->entries.erase(std::remove_if(doc->entries.begin(), doc->entries.end(), lambda), doc->entries.end());
+
+        response["status"] = "ok";
+        response["count"] = results.size();
+        res.status = 200;
+
+        res.set_content(response.dump(), "application/json");
+    });
+    server.Post("/document/(\\w*)/search", [&](lambda_args) {
+        auto &name = req.matches[1];
+        auto found = find_document(name, documents);
+        json response;
+
+        if (found == documents.end()) not_found_document()
+        auto doc = found->get();
+        auto params = json::parse(req.body);
+        auto options = parse_search_options(params);
 
         auto results = doc->search((std::string)params["q"], options);
         response["found"] = json::array();

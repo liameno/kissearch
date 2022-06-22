@@ -81,10 +81,10 @@ namespace kissearch {
             std::shared_ptr<keyword> _keyword;
             std::shared_ptr<boolean> _boolean;
 
-            bool is_number() const { return _number != nullptr; }
-            bool is_text() const { return _text != nullptr; }
-            bool is_keyword() const { return _keyword != nullptr; }
-            bool is_boolean() const { return _boolean != nullptr; }
+            inline bool is_number() const { return _number != nullptr; }
+            inline bool is_text() const { return _text != nullptr; }
+            inline bool is_keyword() const { return _keyword != nullptr; }
+            inline bool is_boolean() const { return _boolean != nullptr; }
         };
 
         std::string name;

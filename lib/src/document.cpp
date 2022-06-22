@@ -219,7 +219,7 @@ namespace kissearch {
         results = results_tmp;
     }
 
-    std::vector<document::result_t> document::search(const std::string &query, const search_options &options) {
+    std::vector<document::result_t> document::search(const std::string &query, const search_options &options, const bool is_delete) {
         const auto page_size_max = options.page * options.page_size;
 
         auto terms = tokenize(query);
@@ -229,7 +229,7 @@ namespace kissearch {
 
         for (const auto &field_name : options.field_names) {
             for (auto &entry: entries) {
-                if (results.size() >= page_size_max) break;
+                if (!is_delete && results.size() >= page_size_max) break;
 
                 auto &field = entry.find_field(field_name);
                 double score = 0;
@@ -259,6 +259,8 @@ namespace kissearch {
                     }
                 }
 
+                if (score <= 0) continue;
+
                 const auto lambda = [&](const result_t &c) { return c.first == entry; };
                 auto found = std::find_if(results.begin(), results.end(), lambda);
 
@@ -267,8 +269,9 @@ namespace kissearch {
             }
         }
 
-        slice_page(results, options);
+        if (!is_delete) slice_page(results, options);
         if (options.sort_by_score) sort_text_results(results);
+
         return results;
     }
 

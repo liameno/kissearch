@@ -140,8 +140,8 @@ namespace {
         return true;
     }
     void remove_special_chars(std::string &s) {
-        static auto special_char_lambda = [](const char &c) { return !std::isalpha(c) && !std::isdigit(c) && c != '\''; };
-        s.erase(std::remove_if(s.begin(), s.end(), special_char_lambda), s.end());
+        const auto lambda = [](const char &c) { return !std::isalpha(c) && !std::isdigit(c) && c != '\''; };
+        s.erase(std::remove_if(s.begin(), s.end(), lambda), s.end());
     }
 }
 
