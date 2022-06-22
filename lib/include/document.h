@@ -32,6 +32,8 @@ namespace kissearch {
     public:
         static std::string get_file_content(const std::string &file_name);
 
+        static bool is_stop(const std::string &s);
+
         static void normalize(std::string &s);
         static std::vector<std::string> tokenize(const std::string &text);
         void stem(std::vector<std::string> &terms);

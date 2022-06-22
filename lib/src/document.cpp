@@ -13,16 +13,31 @@ namespace kissearch {
     }
 
     std::string document::get_file_content(const std::string &file_name) {
-            std::ifstream stream(file_name);
-            std::string buffer;
+        std::ifstream stream(file_name);
+        std::string buffer;
 
-            stream.seekg(0, std::ios::end);
-            buffer.resize(stream.tellg());
-            stream.seekg(0);
-            stream.read(const_cast<char *>(buffer.data()), (int)buffer.size());
+        stream.seekg(0, std::ios::end);
+        buffer.resize(stream.tellg());
+        stream.seekg(0);
+        stream.read(const_cast<char *>(buffer.data()), (int)buffer.size());
 
-            return buffer;
+        return buffer;
+    }
+
+    bool document::is_stop(const std::string &s) {
+        const static std::string words[] = {
+                "i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "would", "should", "could", "ought", "i'm", "you're", "he's", "she's", "it's", "we're", "they're", "i've", "you've", "we've", "they've", "i'd", "you'd", "he'd", "she'd", "we'd", "they'd", "i'll", "you'll", "he'll", "she'll", "we'll", "they'll", "isn't", "aren't", "wasn't", "weren't", "hasn't", "haven't", "hadn't", "doesn't", "don't", "didn't", "won't", "wouldn't", "shan't", "shouldn't", "can't", "cannot", "couldn't", "mustn't", "let's", "that's", "who's", "what's", "here's", "there's", "when's", "where's", "why's", "how's", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very",
+        };
+        const static auto words_size = 173;
+
+        for (short i = 0; i < words_size; ++i) {
+            if (s.front() == words[i].front() && s == words[i]) {
+                return true;
+            }
         }
+
+        return false;
+    }
 
     void document::normalize(std::string &s) {
         to_lower(s);
@@ -38,23 +53,19 @@ namespace kissearch {
         return terms;
     }
     void document::stem(std::vector<std::string> &terms) {
+        static auto lambda = [](std::string &term) { return is_stop(term); };
+        terms.erase(std::remove_if(terms.begin(), terms.end(), lambda), terms.end());
+
         for (auto &term : terms) {
             auto stemmed = sb_stemmer_stem(stemmer, (sb_symbol *)term.c_str(), (int)term.length());
             term = (const char *)stemmed;
         }
-        //static auto lambda = [](std::string &term) { return !porter2::english::stem(term); };
-        //terms.erase(std::remove_if(terms.begin(), terms.end(), lambda), terms.end());
     }
     void document::tokenize(field::value &field) {
         field._text->terms = tokenize(field._text->value);
     }
     void document::stem(field::value &field) {
-        for (auto &term : field._text->terms) {
-            auto stemmed = sb_stemmer_stem(stemmer, (sb_symbol *)term.c_str(), (int)term.length());
-            term = (const char *)stemmed;
-        }
-        //static auto lambda = [](std::string &term) { return !porter2::english::stem(term); };
-        //field._text->terms.erase(std::remove_if(field._text->terms.begin(), field._text->terms.end(), lambda), field._text->terms.end());
+        stem(field._text->terms);
     }
     void document::sort_text_results(std::vector<result_t> &results) {
         auto results_size = results.size();
