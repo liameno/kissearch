@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <thread>
 #include <mutex>
+#include <libstemmer.h>
 
 #include "entry.h"
 
@@ -33,10 +34,10 @@ namespace kissearch {
 
         static void normalize(std::string &s);
         static std::vector<std::string> tokenize(const std::string &text);
-        static void stem(std::vector<std::string> &terms);
+        void stem(std::vector<std::string> &terms);
 
         static void tokenize(field::value &field);
-        static void stem(field::value &field);
+        void stem(field::value &field);
         static void sort_text_results(std::vector<result_t> &results);
     public:
         std::string name;
@@ -48,12 +49,14 @@ namespace kissearch {
         double b;
         ulong cache_idf_size;
         std::mutex mutex;
+        struct sb_stemmer *stemmer;
     private:
         static void write_block(std::stringstream &content, const std::string &type, const std::string &value);
         static void write_block(std::stringstream &content, const std::string &key, const std::string &type, const std::string &value);
         static void parse_block(const std::string &s, std::string &key, std::string &type, std::string &value);
     public:
         explicit document(const ulong &cache_idf_size = 512, const double &k = 1.2, const double &b = 0.75);
+        ~document();
 
         ulong compute_document_length_in_words(const std::string &field_name);
         double compute_tf(entry &e, const std::string &term, field::value &field);

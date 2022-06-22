@@ -7,13 +7,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(include include/httplib.h include/json.hpp)
 set(src )
 
-find_package(ZLIB REQUIRED)
-find_package(Threads REQUIRED)
-
 add_executable(${PROJECT_NAME} main.cpp ${include} ${src})
 
 if (NOT TARGET kissearch)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../lib ${CMAKE_CURRENT_BINARY_DIR}/lib)
 endif()
 
-target_link_libraries(${PROJECT_NAME} z Threads::Threads kissearch)
+target_link_libraries(${PROJECT_NAME} kissearch)

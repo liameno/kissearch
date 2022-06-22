@@ -1,6 +1,8 @@
+#include <fstream>
+
 #include "../include/document.h"
 
-#include "../include/porter2.h"
+#include "../include/str.h"
 #include "../include/compression.h"
 
 namespace kissearch {
@@ -36,15 +38,23 @@ namespace kissearch {
         return terms;
     }
     void document::stem(std::vector<std::string> &terms) {
-        static auto lambda = [](std::string &term) { return !porter2::english::stem(term); };
-        terms.erase(std::remove_if(terms.begin(), terms.end(), lambda), terms.end());
+        for (auto &term : terms) {
+            auto stemmed = sb_stemmer_stem(stemmer, (sb_symbol *)term.c_str(), (int)term.length());
+            term = (const char *)stemmed;
+        }
+        //static auto lambda = [](std::string &term) { return !porter2::english::stem(term); };
+        //terms.erase(std::remove_if(terms.begin(), terms.end(), lambda), terms.end());
     }
     void document::tokenize(field::value &field) {
         field._text->terms = tokenize(field._text->value);
     }
     void document::stem(field::value &field) {
-        static auto lambda = [](std::string &term) { return !porter2::english::stem(term); };
-        field._text->terms.erase(std::remove_if(field._text->terms.begin(), field._text->terms.end(), lambda), field._text->terms.end());
+        for (auto &term : field._text->terms) {
+            auto stemmed = sb_stemmer_stem(stemmer, (sb_symbol *)term.c_str(), (int)term.length());
+            term = (const char *)stemmed;
+        }
+        //static auto lambda = [](std::string &term) { return !porter2::english::stem(term); };
+        //field._text->terms.erase(std::remove_if(field._text->terms.begin(), field._text->terms.end(), lambda), field._text->terms.end());
     }
     void document::sort_text_results(std::vector<result_t> &results) {
         auto results_size = results.size();
@@ -112,7 +122,11 @@ namespace kissearch {
         this->cache_idf_size = cache_idf_size;
         this->k = k;
         this->b = b;
+        this->stemmer = sb_stemmer_new("english", nullptr);
         clear_cache_idf();
+    }
+    document::~document() {
+        sb_stemmer_delete(stemmer);
     }
 
     ulong document::compute_document_length_in_words(const std::string &field_name) {

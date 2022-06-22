@@ -9,21 +9,11 @@ namespace kissearch {
     field::number::number() {
         this->value = 0;
     }
-    field::number::number(const size_t &value) {
+    field::number::number(const ulong &value) {
         this->value = value;
     }
     field::number::number(const std::string &value) {
         this->value = std::stol(value);
-    }
-
-    bool field::number::operator==(const number &v) const {
-        return this->value == v.value;
-    }
-    bool field::number::operator==(const ulong &v) const {
-        return this->value == v;
-    }
-    bool field::number::operator==(const std::string &v) const {
-        return this->value == std::stol(v);
     }
 
     field::text::text() = default;
@@ -66,23 +56,9 @@ namespace kissearch {
         return std::find_if(index.begin(), index.end(), lambda);
     }
 
-    bool field::text::operator==(const text &v) const {
-        return this->value == v.value;
-    }
-    bool field::text::operator==(const std::string &v) const {
-        return this->value == v;
-    }
-
     field::keyword::keyword() = default;
     field::keyword::keyword(const std::string &value) {
         this->value = value;
-    }
-
-    bool field::keyword::operator==(const keyword &v) const {
-        return this->value == v.value;
-    }
-    bool field::keyword::operator==(const std::string &v) const {
-        return this->value == v;
     }
 
     field::boolean::boolean() {
@@ -93,16 +69,6 @@ namespace kissearch {
     }
     field::boolean::boolean(const std::string &value) {
         this->value = (value == "true" || value == "1");
-    }
-
-    bool field::boolean::operator==(const boolean &v) const {
-        return this->value == v.value;
-    }
-    bool field::boolean::operator==(const bool &v) const {
-        return this->value == v;
-    }
-    bool field::boolean::operator==(const std::string &v) const {
-        return this->value == (v == "true" || v == "1");
     }
 
     std::string field::val_s() {
@@ -120,27 +86,7 @@ namespace kissearch {
         }
     }
 
-    bool field::operator==(const field &f) const {
-        return val._number == f.val._number
-               && val._text == f.val._text
-               && val._keyword == f.val._keyword
-               && val._boolean == f.val._boolean;
-    }
-
     entry::entry() {
         fields.reserve(INIT_FIELDS_SIZE);
-        /*numbers.reserve(INIT_FIELDS_SIZE);
-        texts.reserve(INIT_FIELDS_SIZE);
-        keywords.reserve(INIT_FIELDS_SIZE);*/
-    }
-
-    field::value &entry::find_field(const std::string &name) {
-        const auto lambda = [&](const field &f) { return f.name == name; };
-        return std::find_if(fields.begin(), fields.end(), lambda)->val;
-    }
-
-    bool entry::operator ==(const entry &e) const {
-        return this->fields == e.fields;
-        //return this->numbers == e.numbers && this->values == e.texts && this->values == e.keywords;
     }
 }

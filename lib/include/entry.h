@@ -26,12 +26,18 @@ namespace kissearch {
             ulong value;
 
             number();
-            explicit number(const size_t &number);
+            explicit number(const ulong &number);
             explicit number(const std::string &number);
 
-            bool operator==(const number &v) const;
-            bool operator==(const ulong &v) const;
-            bool operator==(const std::string &v) const;
+            inline bool operator==(const number &v) const {
+                return this->value == v.value;
+            }
+            inline bool operator==(const ulong &v) const {
+                return this->value == v;
+            }
+            inline bool operator==(const std::string &v) const {
+                return this->value == std::stol(v);
+            }
         };
         struct text {
             typedef std::pair<std::string, term_info> index_t;
@@ -51,8 +57,12 @@ namespace kissearch {
             __gnu_cxx::__normal_iterator<index_t *, std::vector<index_t>>
             find_index_it(const std::string &s);
 
-            bool operator==(const text &v) const;
-            bool operator==(const std::string &v) const;
+            inline bool operator==(const text &v) const {
+                return this->value == v.value;
+            }
+            inline bool operator==(const std::string &v) const {
+                return this->value == v;
+            }
         };
         struct keyword {
             std::string value;
@@ -60,8 +70,12 @@ namespace kissearch {
             keyword();
             explicit keyword(const std::string &keyword);
 
-            bool operator==(const keyword &v) const;
-            bool operator==(const std::string &v) const;
+            inline bool operator==(const keyword &v) const {
+                return this->value == v.value;
+            }
+            inline bool operator==(const std::string &v) const {
+                return this->value == v;
+            }
         };
         struct boolean {
             bool value;
@@ -70,9 +84,15 @@ namespace kissearch {
             explicit boolean(const bool &boolean);
             explicit boolean(const std::string &boolean);
 
-            bool operator==(const boolean &v) const;
-            bool operator==(const bool &v) const;
-            bool operator==(const std::string &v) const;
+            inline bool operator==(const boolean &v) const {
+                return this->value == v.value;
+            }
+            inline bool operator==(const bool &v) const {
+                return this->value == v;
+            }
+            inline bool operator==(const std::string &v) const {
+                return this->value == (v == "true" || v == "1");
+            }
         };
 
         struct value {
@@ -92,7 +112,12 @@ namespace kissearch {
 
         std::string val_s();
 
-        bool operator==(const field &f) const;
+        inline bool operator==(const field &f) const {
+            return val._number == f.val._number
+                   && val._text == f.val._text
+                   && val._keyword == f.val._keyword
+                   && val._boolean == f.val._boolean;
+        }
     };
 
     struct entry {
@@ -100,9 +125,14 @@ namespace kissearch {
 
         std::vector<field> fields;
 
-        field::value &find_field(const std::string &name);
+        inline field::value &find_field(const std::string &name) {
+            const auto lambda = [&](const field &f) { return f.name == name; };
+            return std::find_if(fields.begin(), fields.end(), lambda)->val;
+        }
 
-        bool operator ==(const entry &e) const;
+        inline bool operator ==(const entry &e) const {
+            return this->fields == e.fields;
+        }
     };
 }
 
