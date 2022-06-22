@@ -27,6 +27,31 @@ target_link_libraries(${PROJECT_NAME} /usr/local/lib/libkissearch.so)
 ```shell
 example/
 ```
+```cpp
+//example.cpp
+int main() {
+    const std::string file_name         = "../index.db";
+    const std::string field_name_text   = "title";
+    const std::string text_query        = "algorithms";
+
+    document::search_options search_options_text;
+    search_options_text.field_names = { field_name_text };
+    
+    document document;
+    document.load(file_name);
+
+    document.index_text_field(field_name_text);
+    auto results = document.search(text_query, search_options_text);
+    
+    for (auto &result : results) {
+        auto &field_id = result.first.find_field(field_name_number);
+        auto &field = result.first.find_field(field_name_text);
+        std::cout << field_id._number->value << " - " << field._text->value << " (score: " << result.second << ")" << std::endl;
+    }
+
+    document.save(file_name);
+}
+```
 ## Server
 ### Build
 ```shell
