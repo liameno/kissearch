@@ -74,14 +74,11 @@ namespace kissearch {
     std::string field::val_s() {
         if (val.is_number()) {
             return std::to_string(val._number->value);
-        }
-        else if (val.is_text()) {
+        } else if (val.is_text()) {
             return val._text->value;
-        }
-        else if (val.is_keyword()) {
+        } else if (val.is_keyword()) {
             return val._keyword->value;
-        }
-        else if (val.is_boolean()) {
+        } else if (val.is_boolean()) {
             return std::to_string(val._boolean->value);
         }
     }

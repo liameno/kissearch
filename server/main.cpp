@@ -132,15 +132,15 @@ int main() {
             const auto lambda2 = [&](const document::field_t &c) { return c.first == key; };
             auto found2 = std::find_if(fields.begin(), fields.end(), lambda2);
 
-            if (found2 == fields.end()) not_found_field();
+            if (found2 == fields.end()) not_found_field()
 
             field f;
             f.name = key;
 
-            if (found2->second == "number") f.val._number = std::make_shared<field::number>((std::string)value);
-            else if (found2->second == "text") f.val._text = std::make_shared<field::text>((std::string)value);
-            else if (found2->second == "keyword") f.val._keyword = std::make_shared<field::keyword>((std::string)value);
-            else if (found2->second == "boolean") f.val._boolean = std::make_shared<field::boolean>((std::string)value);
+            if (found2->second == "number") f.val._number = std::make_shared<field::number>((std::string) value);
+            else if (found2->second == "text") f.val._text = std::make_shared<field::text>((std::string) value);
+            else if (found2->second == "keyword") f.val._keyword = std::make_shared<field::keyword>((std::string) value);
+            else if (found2->second == "boolean") f.val._boolean = std::make_shared<field::boolean>((std::string) value);
 
             e.fields.push_back(f);
 
@@ -154,13 +154,7 @@ int main() {
             const auto lambda2 = [&](const document::field_t &c) { return c.first == key; };
             auto found2 = std::find_if(fields.begin(), fields.end(), lambda2);
 
-            if (found2 == fields.end()) {
-                response["status"] = "error";
-                response["message"] = "Not Found Field";
-                res.status = 500;
-                res.set_content(response.dump(), "application/json");
-                return;
-            }
+            if (found2 == fields.end()) not_found_field()
 
             doc->entries.emplace_back(e);
 
@@ -183,10 +177,10 @@ int main() {
         auto options = parse_search_options(params);
         options.sort_by_score = false;
 
-        auto results = doc->search((std::string)params["q"], options, true);
+        auto results = doc->search((std::string) params["q"], options, true);
 
         const auto lambda = [&](const entry &e) {
-            for (const auto &result : results) if (result.first == e)  return true;
+            for (const auto &result : results) if (result.first == e) return true;
             return false;
         };
         doc->entries.erase(std::remove_if(doc->entries.begin(), doc->entries.end(), lambda), doc->entries.end());
@@ -207,7 +201,7 @@ int main() {
         auto params = json::parse(req.body);
         auto options = parse_search_options(params);
 
-        auto results = doc->search((std::string)params["q"], options);
+        auto results = doc->search((std::string) params["q"], options);
         response["found"] = json::array();
 
         for (const auto &result : results) {

@@ -39,6 +39,7 @@ namespace kissearch {
                 return this->value == std::stol(v);
             }
         };
+
         struct text {
             typedef std::pair<std::string, term_info> index_t;
 
@@ -64,6 +65,7 @@ namespace kissearch {
                 return this->value == v;
             }
         };
+
         struct keyword {
             std::string value;
 
@@ -77,6 +79,7 @@ namespace kissearch {
                 return this->value == v;
             }
         };
+
         struct boolean {
             bool value;
 
@@ -130,7 +133,7 @@ namespace kissearch {
             return std::find_if(fields.begin(), fields.end(), lambda)->val;
         }
 
-        inline bool operator ==(const entry &e) const {
+        inline bool operator==(const entry &e) const {
             return this->fields == e.fields;
         }
     };

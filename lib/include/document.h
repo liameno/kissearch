@@ -18,9 +18,9 @@ namespace kissearch {
     struct document {
     public:
         typedef std::pair<std::string, std::string> field_t;
-        typedef std::pair<entry&, double> result_t;
+        typedef std::pair<entry &, double> result_t;
         typedef std::pair<std::string, double> cache_idf_t;
-    public:
+
         struct search_options {
             std::vector<std::string> field_names;
             bool sort_by_score;
@@ -29,19 +29,7 @@ namespace kissearch {
 
             search_options();
         };
-    public:
-        static std::string get_file_content(const std::string &file_name);
 
-        static bool is_stop(const std::string &s);
-
-        static void normalize(std::string &s);
-        static std::vector<std::string> tokenize(const std::string &text);
-        void stem(std::vector<std::string> &terms);
-
-        static void tokenize(field::value &field);
-        void stem(field::value &field);
-        static void sort_text_results(std::vector<result_t> &results);
-    public:
         std::string name;
         std::vector<entry> entries;
         std::vector<field_t> fields;
@@ -52,6 +40,18 @@ namespace kissearch {
         ulong cache_idf_size;
         std::mutex mutex;
         struct sb_stemmer *stemmer;
+    public:
+        static std::string get_file_content(const std::string &file_name);
+
+        static bool is_stop(const std::string &s);
+
+        static void normalize(std::string &s);
+        static std::vector<std::string> tokenize(const std::string &text);
+        void stem(std::vector<std::string> &terms);
+
+        static void tokenize(const field::value &field);
+        void stem(field::value &field);
+        static void sort_text_results(std::vector<result_t> &results);
     private:
         static void write_block(std::stringstream &content, const std::string &type, const std::string &value);
         static void write_block(std::stringstream &content, const std::string &key, const std::string &type, const std::string &value);
@@ -73,7 +73,8 @@ namespace kissearch {
 
         static void slice_page(std::vector<result_t> &results, const search_options &options);
 
-        std::vector<result_t> search(const std::string& query, const search_options &options, const bool is_delete = false);
+        std::vector<result_t>
+        search(const std::string &query, const search_options &options, const bool is_delete = false);
 
         void add(const entry &e);
 

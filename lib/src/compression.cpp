@@ -7,8 +7,8 @@ namespace kissearch::compression {
         memset(&zs, 0, sizeof(zs));
         deflateInit(&zs, level);
 
-        zs.next_in = (Bytef *)s.data();
-        zs.avail_in = (uint)s.size();
+        zs.next_in = (Bytef *) s.data();
+        zs.avail_in = (uint) s.size();
 
         int code;
         char buffer[BLOCK_SIZE];
@@ -33,8 +33,8 @@ namespace kissearch::compression {
         memset(&zs, 0, sizeof(zs));
         inflateInit(&zs);
 
-        zs.next_in = (Bytef *)s.data();
-        zs.avail_in = (uint)s.size();
+        zs.next_in = (Bytef *) s.data();
+        zs.avail_in = (uint) s.size();
 
         int code;
         char buffer[BLOCK_SIZE];

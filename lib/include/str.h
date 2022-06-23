@@ -127,7 +127,7 @@ namespace {
     bool ends_with(const std::string &s, const std::string &v) {
         const size_t v_size = v.size();
         const size_t s_size = s.size();
-        const size_t size = s_size  - v_size;
+        const size_t size = s_size - v_size;
 
         if (s_size < v_size) return false;
 

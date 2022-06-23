@@ -19,14 +19,22 @@ namespace kissearch {
         stream.seekg(0, std::ios::end);
         buffer.resize(stream.tellg());
         stream.seekg(0);
-        stream.read(const_cast<char *>(buffer.data()), (int)buffer.size());
+        stream.read(const_cast<char *>(buffer.data()), (int) buffer.size());
 
         return buffer;
     }
 
     bool document::is_stop(const std::string &s) {
         const static std::string words[] = {
-                "i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "would", "should", "could", "ought", "i'm", "you're", "he's", "she's", "it's", "we're", "they're", "i've", "you've", "we've", "they've", "i'd", "you'd", "he'd", "she'd", "we'd", "they'd", "i'll", "you'll", "he'll", "she'll", "we'll", "they'll", "isn't", "aren't", "wasn't", "weren't", "hasn't", "haven't", "hadn't", "doesn't", "don't", "didn't", "won't", "wouldn't", "shan't", "shouldn't", "can't", "cannot", "couldn't", "mustn't", "let's", "that's", "who's", "what's", "here's", "there's", "when's", "where's", "why's", "how's", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very",
+                "i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it",
+                "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been",
+                "being", "have", "has", "had", "having", "do", "does", "did", "doing", "would", "should", "could", "ought", "i'm", "you're", "he's", "she's", "it's", "we're", "they're", "i've",
+                "you've", "we've", "they've", "i'd", "you'd", "he'd", "she'd", "we'd", "they'd", "i'll", "you'll", "he'll", "she'll", "we'll", "they'll", "isn't", "aren't", "wasn't", "weren't",
+                "hasn't", "haven't", "hadn't", "doesn't", "don't", "didn't", "won't", "wouldn't", "shan't", "shouldn't", "can't", "cannot", "couldn't", "mustn't", "let's", "that's", "who's", "what's",
+                "here's", "there's", "when's", "where's", "why's", "how's", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about",
+                "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further",
+                "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same",
+                "so", "than", "too", "very",
         };
         const static auto words_size = 173;
 
@@ -53,15 +61,15 @@ namespace kissearch {
         return terms;
     }
     void document::stem(std::vector<std::string> &terms) {
-        static auto lambda = [](std::string &term) { return is_stop(term); };
+        const auto lambda = [](const std::string &term) { return is_stop(term); };
         terms.erase(std::remove_if(terms.begin(), terms.end(), lambda), terms.end());
 
         for (auto &term : terms) {
-            auto stemmed = sb_stemmer_stem(stemmer, (sb_symbol *)term.c_str(), (int)term.length());
-            term = (const char *)stemmed;
+            auto stemmed = sb_stemmer_stem(stemmer, (sb_symbol *) term.c_str(), (int) term.length());
+            term = (const char *) stemmed;
         }
     }
-    void document::tokenize(field::value &field) {
+    void document::tokenize(const field::value &field) {
         field._text->terms = tokenize(field._text->value);
     }
     void document::stem(field::value &field) {
@@ -113,10 +121,10 @@ namespace kissearch {
 
             if (start == 0) {
                 key = s.substr(start, end - start);
-                start = (int)end + 1;
+                start = (int) end + 1;
             } else {
                 type = s.substr(start, end - start);
-                start = (int)end + 1;
+                start = (int) end + 1;
                 break;
             }
         }
@@ -153,7 +161,7 @@ namespace kissearch {
     double document::compute_tf(entry &e, const std::string &term, field::value &field) {
         auto score = 0;
 
-        for (auto &word: field._text->terms) {
+        for (auto &word : field._text->terms) {
             field._text->find_index(word).count = 0;
         }
         for (auto &w : field._text->terms) {
@@ -172,7 +180,7 @@ namespace kissearch {
         const auto size = entries.size();
         ulong found_size = 0;
 
-        for (auto &entry2: entries) {
+        for (auto &entry2 : entries) {
             auto &field = entry2.find_field(field_name);
 
             if (field._text->find_term_it(term) != field._text->terms.end()) {
@@ -180,17 +188,17 @@ namespace kissearch {
             }
         }
 
-        auto idf = std::log(((double)size - (double)found_size + 0.5) / ((double)found_size + 0.5) + 1);
+        auto idf = std::log1p(((double) size - (double) found_size + 0.5) / ((double) found_size + 0.5));
         cache_idf.emplace_back(term, idf);
         return idf;
     }
     double document::compute_bm25(entry &e, const std::string &term, field::value &field, const std::string &field_name, const ulong &document_length_in_words) {
-        auto entries_size = (double)entries.size();
-        auto field_size = (double)field._text->terms.size();
+        auto entries_size = (double) entries.size();
+        auto field_size = (double) field._text->terms.size();
 
         auto tf = compute_tf(e, term, field);
         auto idf = compute_idf(e, term, field_name);
-        auto avgdl = (double)document_length_in_words / entries_size;
+        auto avgdl = (double) document_length_in_words / entries_size;
 
         return idf * (tf * (k + 1)) / (tf + k * (1 - b + b * field_size / avgdl));
     }
@@ -253,7 +261,7 @@ namespace kissearch {
         std::vector<result_t> results;
 
         for (const auto &field_name : options.field_names) {
-            for (auto &entry: entries) {
+            for (auto &entry : entries) {
                 if (!is_delete && results.size() >= page_size_max) break;
 
                 auto &field = entry.find_field(field_name);
@@ -263,22 +271,19 @@ namespace kissearch {
                     if (field._number->operator==(std::stol(query))) {
                         score = 1;
                     }
-                }
-                else if (field.is_text()) {
-                    for (auto &term: terms) {
+                } else if (field.is_text()) {
+                    for (auto &term : terms) {
                         auto found = field._text->find_index_it(term);
 
                         if (found != field._text->index.end()) {
                             score += found->second.score;
                         }
                     }
-                }
-                else if (field.is_keyword()) {
+                } else if (field.is_keyword()) {
                     if (field._keyword->operator==(query)) {
                         score = 1;
                     }
-                }
-                else if (field.is_boolean()) {
+                } else if (field.is_boolean()) {
                     if (field._boolean->operator==(query)) {
                         score = 1;
                     }
@@ -344,33 +349,27 @@ namespace kissearch {
             t = type.front();
 
             if (t == 'n') {
-                field f {key};
+                field f { key };
                 f.val._number = std::make_shared<field::number>(value);
                 e.fields.push_back(f);
-            }
-            else if (t == 't') {
-                field f {key};
+            } else if (t == 't') {
+                field f { key };
                 f.val._text = std::make_shared<field::text>(value);
                 e.fields.push_back(f);
                 text_field = key;
-            }
-            else if (t == 'w') {
+            } else if (t == 'w') {
                 e.find_field(text_field)._text->terms.push_back(value);
                 index_field = value;
-            }
-            else if (t == 'c') {
+            } else if (t == 'c') {
                 e.find_field(text_field)._text->find_index(index_field).count = std::stol(value);
-            }
-            else if (t == 's') {
+            } else if (t == 's') {
                 e.find_field(text_field)._text->find_index(index_field).score = std::stod(value);
-            }
-            else if (t == 'k') {
-                field f {key};
+            } else if (t == 'k') {
+                field f { key };
                 f.val._keyword = std::make_shared<field::keyword>(value);
                 e.fields.push_back(f);
-            }
-            else if (t == 'b') {
-                field f {key};
+            } else if (t == 'b') {
+                field f { key };
                 f.val._boolean = std::make_shared<field::boolean>(value);
                 e.fields.push_back(f);
             }
@@ -382,7 +381,7 @@ namespace kissearch {
         }
 
         std::stringstream content;
-        write_block(content,  "d", name);
+        write_block(content, "d", name);
 
         for (auto &entry : entries) {
             for (auto &f : entry.fields) {
@@ -392,16 +391,13 @@ namespace kissearch {
                 if (f.val.is_number()) {
                     value = std::to_string(f.val._number->value);
                     type = "n";
-                }
-                else if (f.val.is_text()) {
+                } else if (f.val.is_text()) {
                     value = f.val._text->value;
                     type = "t";
-                }
-                else if (f.val.is_keyword()) {
+                } else if (f.val.is_keyword()) {
                     value = f.val._keyword->value;
                     type = "k";
-                }
-                else if (f.val.is_boolean()) {
+                } else if (f.val.is_boolean()) {
                     value = std::to_string(f.val._boolean->value);
                     type = "b";
                 }
@@ -422,9 +418,9 @@ namespace kissearch {
         }
 
         std::string data = compression::compress(content.str());
-        std::ofstream file(file_name,std::ofstream::binary);
+        std::ofstream file(file_name, std::ofstream::binary);
 
-        file.write(data.data(), (int)data.size());
+        file.write(data.data(), (int) data.size());
         file.close();
     }
 }

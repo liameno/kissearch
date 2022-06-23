@@ -1,5 +1,5 @@
-#ifndef KISSEARCH_COMPRESSION_H
-#define KISSEARCH_COMPRESSION_H
+#ifndef COMPRESSION_H
+#define COMPRESSION_H
 
 #include <string>
 #include <zlib.h>

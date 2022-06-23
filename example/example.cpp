@@ -20,24 +20,28 @@ using namespace std::chrono;
 
 void load_example(document &document, const std::string &field_name_number, const std::string &field_name_text, const std::string &field_name_keyword) {
     std::vector<std::pair<std::string, std::string>> texts = {
-            {"The Hilltop algorithm is an algorithm used to find documents relevant to a particular keyword topic in news search", "https://en.wikipedia.org/wiki/Hilltop_algorithm"},
-            {"VisualRank is a system for finding and ranking images by analysing and comparing their content, rather than searching image names, Web links or other text", "https://en.wikipedia.org/wiki/VisualRank"},
-            {"TrustRank is an algorithm that conducts link analysis to separate useful webpages from spam and helps search engine rank pages in SERPs (Search Engine Results Pages)", "https://en.wikipedia.org/wiki/TrustRank"},
-            {"The CheiRank is an eigenvector with a maximal real eigenvalue of the Google matrix constructed for a directed network with the inverted directions of links", "https://en.wikipedia.org/wiki/CheiRank"},
-            {"PageRank (PR) is an algorithm used by Google Search to rank web pages in their search engine results", "https://en.wikipedia.org/wiki/PageRank"},
-            {"Okapi BM25 (BM is an abbreviation of best matching) is a ranking function used by search engines to estimate the relevance of documents to a given search query", "https://en.wikipedia.org/wiki/Okapi_BM25"},
-            {"term frequency–inverse document frequency", "https://en.wikipedia.org/wiki/Tf%E2%80%93idf"},
+            { "The Hilltop algorithm is an algorithm used to find documents relevant to a particular keyword topic in news search",                                                    "https://en.wikipedia.org/wiki/Hilltop_algorithm" },
+            { "VisualRank is a system for finding and ranking images by analysing and comparing their content, rather than searching image names, Web links or other text",            "https://en.wikipedia.org/wiki/VisualRank" },
+            { "TrustRank is an algorithm that conducts link analysis to separate useful webpages from spam and helps search engine rank pages in SERPs (Search Engine Results Pages)", "https://en.wikipedia.org/wiki/TrustRank" },
+            { "The CheiRank is an eigenvector with a maximal real eigenvalue of the Google matrix constructed for a directed network with the inverted directions of links",           "https://en.wikipedia.org/wiki/CheiRank" },
+            { "PageRank (PR) is an algorithm used by Google Search to rank web pages in their search engine results",                                                                  "https://en.wikipedia.org/wiki/PageRank" },
+            { "Okapi BM25 (BM is an abbreviation of best matching) is a ranking function used by search engines to estimate the relevance of documents to a given search query",       "https://en.wikipedia.org/wiki/Okapi_BM25" },
+            { "term frequency–inverse document frequency",                                                                                                                             "https://en.wikipedia.org/wiki/Tf%E2%80%93idf" },
     };
 
     for (int i = 0; i < 1000; ++i) {
-        for (const auto &text: texts) {
+        for (const auto &text : texts) {
             entry e;
 
-            field f_n; f_n.name = field_name_number;
+            field f_n, f_t, f_k;
+
+            f_n.name = field_name_number;
             f_n.val._number = std::make_shared<field::number>(document.compute_next_number_value(field_name_number));
-            field f_t; f_t.name = field_name_text;
+
+            f_t.name = field_name_text;
             f_t.val._text = std::make_shared<field::text>(text.first);
-            field f_k; f_k.name = field_name_keyword;
+
+            f_k.name = field_name_keyword;
             f_k.val._keyword = std::make_shared<field::keyword>(text.second);
 
             e.fields.push_back(f_n);
@@ -52,13 +56,13 @@ void load_example(document &document, const std::string &field_name_number, cons
 }
 
 int main() {
-    const std::string file_name          = "../index.db";
-    const std::string field_name_number  = "id";
-    const std::string field_name_text    = "title";
+    const std::string file_name = "../index.db";
+    const std::string field_name_number = "id";
+    const std::string field_name_text = "title";
     const std::string field_name_keyword = "url";
 
-    const std::string number_query  = "5";
-    const std::string text_query    = "algorithms link";
+    const std::string number_query = "5";
+    const std::string text_query = "algorithms link";
     const std::string keyword_query = "https://en.wikipedia.org/wiki/Hilltop_algorithm";
 
     document document;
