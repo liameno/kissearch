@@ -4,8 +4,8 @@ project(kissearch)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Ofast")
 set(CMAKE_CXX_STANDARD 17)
 
-set(include include/str.h include/document.h include/entry.h include/compression.h)
-set(src src/document.cpp src/entry.cpp src/compression.cpp)
+set(include include/str.h include/document.h include/entry.h include/compression.h include/collection.h)
+set(src src/document.cpp src/entry.cpp src/compression.cpp src/collection.cpp)
 
 find_package(ZLIB REQUIRED)
 find_package(Threads REQUIRED)
@@ -13,7 +13,7 @@ find_package(Threads REQUIRED)
 if (NOT TARGET kissearch)
     add_library(${PROJECT_NAME} SHARED ${include} ${src})
     target_link_libraries(${PROJECT_NAME} z Threads::Threads /usr/lib/libstemmer.so)
-endif()
+endif ()
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 

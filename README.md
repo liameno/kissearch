@@ -66,7 +66,7 @@ cd server && mkdir build && cd build && cmake .. && make
 curl -XGET 0.0.0.0:8080/document/x -d
 curl -XPOST 0.0.0.0:8080/document/x -d '{"a":"text"}'
 curl -XPOST 0.0.0.0:8080/document/x/add -d '{"a":"example"}'
-curl -XPOST 0.0.0.0:8080/document/x/delete -d '{"q":"example","field_names":"a"}'
+curl -XPOST 0.0.0.0:8080/document/x/remove -d '{"q":"example","field_names":"a"}'
 curl -XPOST 0.0.0.0:8080/document/x/search -d '{"q":"example","field_names":"a"}'
 ```
 ## License

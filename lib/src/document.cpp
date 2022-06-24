@@ -305,6 +305,16 @@ namespace kissearch {
         return results;
     }
 
+    void document::remove(const entry &e) {
+        mutex.lock();
+        for (int i = 0; i < entries.size(); ++i) {
+            if (entries[i] == e) {
+                entries.erase(entries.begin() + i);
+                --i;
+            }
+        }
+        mutex.unlock();
+    }
     void document::add(const entry &e) {
         mutex.lock();
         this->entries.push_back(e);

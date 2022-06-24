@@ -5,6 +5,7 @@
 #include "include/httplib.h"
 #include "include/json.hpp"
 #include "str.h"
+#include "collection.h"
 
 using namespace httplib;
 using namespace nlohmann;
@@ -49,18 +50,15 @@ inline auto parse_search_options(const json &params) {
 
     return options;
 }
-inline auto find_document(const std::string &name, const std::vector<document_t> &documents) {
-    const auto lambda = [&](const document_t &c) { return c->name == name; };
-    return std::find_if(documents.begin(), documents.end(), lambda);
-}
 
 int main() {
     Server server;
-    std::vector<document_t> documents;
+    collection collection;
+    auto &documents = collection.documents;
 
     server.Get("/document/(\\w*)", [&](lambda_args) {
         auto &name = req.matches[1];
-        auto found = find_document(name, documents);
+        auto found = collection.find_document(name);
         json response;
 
         if (found == documents.end()) not_found_document()
@@ -83,7 +81,7 @@ int main() {
     });
     server.Post("/document/(\\w*)", [&](lambda_args) {
         auto &name = req.matches[1];
-        auto found = find_document(name, documents);
+        auto found = collection.find_document(name);
         json response;
 
         if (found != documents.end()) already_exists_document()
@@ -104,7 +102,7 @@ int main() {
             doc->fields.emplace_back(param.key(), param.value());
         }
 
-        documents.push_back(doc);
+        collection.add(doc);
 
         response["status"] = "ok";
         res.status = 200;
@@ -113,7 +111,7 @@ int main() {
     });
     server.Post("/document/(\\w*)/add", [&](lambda_args) {
         auto &name = req.matches[1];
-        auto found = find_document(name, documents);
+        auto found = collection.find_document(name);
         json response;
 
         if (found == documents.end()) not_found_document()
@@ -166,9 +164,9 @@ int main() {
 
         res.set_content(response.dump(), "application/json");
     });
-    server.Post("/document/(\\w*)/delete", [&](lambda_args) {
+    server.Post("/document/(\\w*)/remove", [&](lambda_args) {
         auto &name = req.matches[1];
-        auto found = find_document(name, documents);
+        auto found = collection.find_document(name);
         json response;
 
         if (found == documents.end()) not_found_document()
@@ -179,11 +177,9 @@ int main() {
 
         auto results = doc->search((std::string) params["q"], options, true);
 
-        const auto lambda = [&](const entry &e) {
-            for (const auto &result : results) if (result.first == e) return true;
-            return false;
-        };
-        doc->entries.erase(std::remove_if(doc->entries.begin(), doc->entries.end(), lambda), doc->entries.end());
+        for (const auto &result : results) {
+            doc->remove(result.first);
+        }
 
         response["status"] = "ok";
         response["count"] = results.size();
@@ -193,7 +189,7 @@ int main() {
     });
     server.Post("/document/(\\w*)/search", [&](lambda_args) {
         auto &name = req.matches[1];
-        auto found = find_document(name, documents);
+        auto found = collection.find_document(name);
         json response;
 
         if (found == documents.end()) not_found_document()

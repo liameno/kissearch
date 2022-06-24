@@ -15,7 +15,7 @@
 #include "entry.h"
 
 namespace kissearch {
-    struct document {
+    class document {
     public:
         typedef std::pair<std::string, std::string> field_t;
         typedef std::pair<entry &, double> result_t;
@@ -76,6 +76,7 @@ namespace kissearch {
         std::vector<result_t>
         search(const std::string &query, const search_options &options, const bool is_delete = false);
 
+        void remove(const entry &e);
         void add(const entry &e);
 
         void load(const std::string &file_name);
