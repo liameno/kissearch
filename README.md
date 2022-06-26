@@ -1,7 +1,11 @@
 # kissearch
+
 A fast fulltext search engine
+
 ###### Keep It Simple, Stupid
+
 ## Features
+
 - BM25
 - Cache
 - Index
@@ -9,38 +13,51 @@ A fast fulltext search engine
 - Tokenizer
 - Load/Save index from file/memory
 - Compression(when saving)
+
 ### Fields
+
 - Number
 - Text
 - Keyword
 - Boolean
+
 ## Lib
+
 ### Build/Install
+
 ```shell
 cd lib && mkdir build && cd build && cmake .. && make && sudo make install
 ```
+
 ### CMake
+
 ```cmake
 target_link_libraries(${PROJECT_NAME} /usr/local/lib/libkissearch.so)
 ```
+
 ### Example
+
 ```shell
 example/
 ```
+
 ```cpp
 //example.cpp
 int main() {
     const std::string file_name         = "../index.db";
     const std::string field_name_text   = "title";
     const std::string text_query        = "algorithms";
-
+    
     document::search_options search_options_text;
     search_options_text.field_names = { field_name_text };
-    
-    document document;
-    document.load(file_name);
 
+    collection collection;
+    collection.documents.push_back(std::make_shared<document>());
+    auto &document = *collection.documents.front();
+    
+    document.load(file_name);
     document.index_text_field(field_name_text);
+    
     auto results = document.search(text_query, search_options_text);
     
     for (auto &result : results) {
@@ -48,20 +65,60 @@ int main() {
         auto &field = result.first.find_field(field_name_text);
         std::cout << field_id._number->value << " - " << field._text->value << " (score: " << result.second << ")" << std::endl;
     }
-
+    
     document.save(file_name);
 }
 ```
+
 ## Server
+
 ### Build
+
 ```shell
 cd server && mkdir build && cd build && cmake .. && make
 ```
+
 ### Start
+
 ```shell
 ./server
 ```
+
 ### Use
+
+```shell
+GET /document/x #get document info 
+# {
+#   "entries":{"count":0},
+#   "fields":[{"name":"a","type":"text"}],
+#   "status":"ok"
+# }
+POST /document/x -d '{"a":"text"}'
+# {
+#   "status":"ok"
+# }
+POST /document/x/add -d '{"a":"example"}'
+# {
+#   "status":"ok"
+# }
+POST /document/x/remove -d '{"q":"example","field_names":"a"}'
+# {
+#   "count":1,
+#   "status":"ok"
+# }
+POST /document/x/search -d '{"q":"example","field_names":"a"}'
+# {
+#   "count":1,
+#   "found":[{"entry":{"a":"example"},"score":0.2876820724517809}]
+#   "status":"ok"
+# }
+
+# Errors("status":"error"):
+#   already_exists_document "message":"Already Exists"
+#   not_found_document "message":"Not Found"
+#   not_found_field "message":"Not Found Field"
+```
+
 ```shell
 curl -XGET 0.0.0.0:8080/document/x -d
 curl -XPOST 0.0.0.0:8080/document/x -d '{"a":"text"}'
@@ -69,5 +126,7 @@ curl -XPOST 0.0.0.0:8080/document/x/add -d '{"a":"example"}'
 curl -XPOST 0.0.0.0:8080/document/x/remove -d '{"q":"example","field_names":"a"}'
 curl -XPOST 0.0.0.0:8080/document/x/search -d '{"q":"example","field_names":"a"}'
 ```
+
 ## License
+
 GNU Affero General Public License v3.0

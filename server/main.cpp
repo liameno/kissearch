@@ -1,17 +1,15 @@
 #include <iostream>
 
-#include "../lib/include/document.h"
+#include "document.h"
+#include "collection.h"
 
 #include "include/httplib.h"
 #include "include/json.hpp"
 #include "str.h"
-#include "collection.h"
 
 using namespace httplib;
 using namespace nlohmann;
 using namespace kissearch;
-
-typedef std::shared_ptr<document> document_t;
 
 #define lambda_args const Request &req, Response &res
 #define already_exists_document() { response["status"] = "error";\
@@ -30,7 +28,7 @@ typedef std::shared_ptr<document> document_t;
                         res.set_content(response.dump(), "application/json");\
                         return; }
 
-inline auto parse_search_options(const json &params) {
+inline document::search_options parse_search_options(const json &params) {
     document::search_options options;
 
     for (auto &param : params.items()) {
@@ -127,9 +125,7 @@ int main() {
             const auto &key = param.key();
             const auto &value = param.value();
 
-            const auto lambda2 = [&](const document::field_t &c) { return c.first == key; };
-            auto found2 = std::find_if(fields.begin(), fields.end(), lambda2);
-
+            auto found2 = std::find_if(fields.begin(), fields.end(), [&](const document::field_t &c) { return c.first == key; });
             if (found2 == fields.end()) not_found_field()
 
             field f;
@@ -149,9 +145,7 @@ int main() {
             const auto &key = param.key();
             const auto &value = param.value();
 
-            const auto lambda2 = [&](const document::field_t &c) { return c.first == key; };
-            auto found2 = std::find_if(fields.begin(), fields.end(), lambda2);
-
+            auto found2 = std::find_if(fields.begin(), fields.end(), [&](const document::field_t &c) { return c.first == key; });
             if (found2 == fields.end()) not_found_field()
 
             doc->entries.emplace_back(e);

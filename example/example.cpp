@@ -3,7 +3,8 @@
 #include <string>
 #include <filesystem>
 
-#include "../lib/include/document.h"
+#include "document.h"
+#include "collection.h"
 
 #define reset   "\033[0m"
 #define black    "\033[30m"
@@ -65,7 +66,9 @@ int main() {
     const std::string text_query = "algorithms link";
     const std::string keyword_query = "https://en.wikipedia.org/wiki/Hilltop_algorithm";
 
-    document document;
+    collection collection;
+    collection.documents.push_back(std::make_shared<document>());
+    auto &document = *collection.documents.front();
 
     auto start_time = high_resolution_clock::now();
 
@@ -77,15 +80,13 @@ int main() {
         std::cout << reset << "From db" << std::endl;
     }
 
-    auto end_time = high_resolution_clock::now();
-    std::cout << reset << "Load: " << cyan << duration_cast<milliseconds>(end_time - start_time).count() << " ms" << std::endl;
+    std::cout << reset << "Load: " << cyan << duration_cast<milliseconds>(high_resolution_clock::now() - start_time).count() << " ms" << std::endl;
     std::cout << reset << "Size: " << red << document.entries.size() << std::endl;
     start_time = high_resolution_clock::now();
 
     document.index_text_field(field_name_text);
 
-    end_time = high_resolution_clock::now();
-    std::cout << reset << "Index: " << red << duration_cast<milliseconds>(end_time - start_time).count() << " ms" << std::endl;
+    std::cout << reset << "Index: " << red << duration_cast<milliseconds>(high_resolution_clock::now() - start_time).count() << " ms" << std::endl;
     start_time = high_resolution_clock::now();
 
     document::search_options search_options_number;
@@ -100,8 +101,7 @@ int main() {
     auto t_results = document.search(text_query, search_options_text);
     auto k_results = document.search(keyword_query, search_options_keyword);
 
-    end_time = high_resolution_clock::now();
-    std::cout << reset << "Search: " << red << duration_cast<milliseconds>(end_time - start_time).count() << " ms" << std::endl;
+    std::cout << reset << "Search: " << red << duration_cast<milliseconds>(high_resolution_clock::now() - start_time).count() << " ms" << std::endl;
 
     std::cout << reset << "Found Numbers: " << green << n_results.size() << std::endl;
     std::cout << reset << "Found Texts: " << green << t_results.size() << std::endl;
@@ -111,11 +111,11 @@ int main() {
         auto &field = result.first.find_field(field_name_number);
         std::cout << reset << field._number->value << green << " (score: " << result.second << ")" << std::endl;
     }*/
-    /*for (auto &result : t_results) {
+    for (auto &result : t_results) {
         auto &field_id = result.first.find_field(field_name_number);
         auto &field = result.first.find_field(field_name_text);
         std::cout << magenta << field_id._number->value << reset << " - " << reset << field._text->value << green << " (score: " << result.second << ")" << std::endl;
-    }*/
+    }
     /*for (auto &result : k_results) {
         auto &field = result.first.find_field(field_name_keyword);
         std::cout << reset << field._keyword->value << green << " (score: " << result.second << ")" << std::endl;
@@ -125,8 +125,7 @@ int main() {
 
     //document.save(file_name);
 
-    end_time = high_resolution_clock::now();
-    std::cout << reset << "Save: " << cyan << duration_cast<milliseconds>(end_time - start_time).count() << " ms" << std::endl;
+    std::cout << reset << "Save: " << cyan << duration_cast<milliseconds>(high_resolution_clock::now() - start_time).count() << " ms" << std::endl;
 
     return 0;
 }

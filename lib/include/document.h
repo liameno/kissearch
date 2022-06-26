@@ -73,8 +73,7 @@ namespace kissearch {
 
         static void slice_page(std::vector<result_t> &results, const search_options &options);
 
-        std::vector<result_t>
-        search(const std::string &query, const search_options &options, const bool is_delete = false);
+        std::vector<result_t> search(const std::string &query, const search_options &options, const bool is_delete = false);
 
         void remove(const entry &e);
         void add(const entry &e);
