@@ -143,12 +143,9 @@ comparison/
 |-------------------|--------|-----------------|--------------|
 | Kissearch(server) | 30mb   | 12s             | 9ms          |
 | Kissearch(lib)    | 28mb   | 0.2s            | 0.7ms        |
-| Typesense(server) | 125mb  | 53s             | 13ms         |
+| Typesense(server) | 118mb  | 53s             | 13ms         |
 
 ###### Entries Size: 7000
-
-### Kissearch: 30 mb
-#### Typesense: 118 mb
 
 ## License
 
