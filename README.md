@@ -42,7 +42,7 @@ example/
 ```
 
 ```cpp
-//example.cpp
+//full: example/example.cpp
 int main() {
     const std::string file_name         = "../index.db";
     const std::string field_name_text   = "title";
@@ -93,20 +93,24 @@ GET /document/x #get document info
 #   "fields":[{"name":"a","type":"text"}],
 #   "status":"ok"
 # }
-POST /document/x -d '{"a":"text"}'
+POST /document/x -d '{"a":"text"}' #create document 
 # {
 #   "status":"ok"
 # }
-POST /document/x/add -d '{"a":"example"}'
+POST /document/x/add -d '{"a":"example"}' #create entry 
 # {
 #   "status":"ok"
 # }
-POST /document/x/remove -d '{"q":"example","field_names":"a"}'
+POST document/x/index -d '' #index 
+# {
+#   "status":"ok"
+# }
+POST /document/x/remove -d '{"q":"example","field_names":"a"}' #remove entries, only after index
 # {
 #   "count":1,
 #   "status":"ok"
 # }
-POST /document/x/search -d '{"q":"example","field_names":"a"}'
+POST /document/x/search -d '{"q":"example","field_names":"a"}' #search entries, only after index
 # {
 #   "count":1,
 #   "found":[{"entry":{"a":"example"},"score":0.2876820724517809}]
@@ -114,6 +118,7 @@ POST /document/x/search -d '{"q":"example","field_names":"a"}'
 # }
 
 # Errors("status":"error"):
+#   exception "message":"*what*"
 #   already_exists_document "message":"Already Exists"
 #   not_found_document "message":"Not Found"
 #   not_found_field "message":"Not Found Field"
@@ -123,9 +128,27 @@ POST /document/x/search -d '{"q":"example","field_names":"a"}'
 curl -XGET 0.0.0.0:8080/document/x -d
 curl -XPOST 0.0.0.0:8080/document/x -d '{"a":"text"}'
 curl -XPOST 0.0.0.0:8080/document/x/add -d '{"a":"example"}'
+curl -XPOST 0.0.0.0:8080/document/x/index -d ''
 curl -XPOST 0.0.0.0:8080/document/x/remove -d '{"q":"example","field_names":"a"}'
 curl -XPOST 0.0.0.0:8080/document/x/search -d '{"q":"example","field_names":"a"}'
 ```
+
+## Comparison
+
+```shell
+comparison/
+```
+
+| Name              | Memory | Time(index/add) | Time(search) |
+|-------------------|--------|-----------------|--------------|
+| Kissearch(server) | 30mb   | 12s             | 9ms          |
+| Kissearch(lib)    | 28mb   | 0.2s            | 0.7ms        |
+| Typesense(server) | 125mb  | 53s             | 13ms         |
+
+###### Entries Size: 7000
+
+### Kissearch: 30 mb
+#### Typesense: 118 mb
 
 ## License
 

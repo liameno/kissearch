@@ -211,6 +211,14 @@ namespace kissearch {
     void document::clear_cache_idf() {
         cache_idf = std::vector<cache_idf_t>(cache_idf_size);
     }
+
+    void document::index() {
+        for (auto &field : fields) {
+            if (field.second == "text") {
+                index_text_field(field.first);
+            }
+        }
+    }
     void document::index_text_field(const std::string &field_name) {
         mutex.lock();
         clear_cache_idf();

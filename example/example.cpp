@@ -101,7 +101,11 @@ int main() {
     auto t_results = document.search(text_query, search_options_text);
     auto k_results = document.search(keyword_query, search_options_keyword);
 
-    std::cout << reset << "Search: " << red << duration_cast<milliseconds>(high_resolution_clock::now() - start_time).count() << " ms" << std::endl;
+    std::cout << reset << "Search: " << red << duration_cast<microseconds>(high_resolution_clock::now() - start_time).count() << " ms" << std::endl;
+
+    while(true) {
+        std::this_thread::sleep_for(seconds(5));
+    }
 
     std::cout << reset << "Found Numbers: " << green << n_results.size() << std::endl;
     std::cout << reset << "Found Texts: " << green << t_results.size() << std::endl;

@@ -17,6 +17,11 @@ using namespace kissearch;
                             res.status = 404;\
                             res.set_content(response.dump(), "application/json");\
                             return; }
+#define exception() { response["status"] = "error";\
+                            response["message"] = e.what();\
+                            res.status = 500;\
+                            res.set_content(response.dump(), "application/json");\
+                            return; }
 #define not_found_document() { response["status"] = "error";\
                             response["message"] = "Not Found";\
                             res.status = 404;\
@@ -137,21 +142,93 @@ int main() {
             else if (found2->second == "boolean") f.val._boolean = std::make_shared<field::boolean>((std::string) value);
 
             e.fields.push_back(f);
-
-            if (found2->second == "text") doc->index_text_field(key);
         }
 
-        for (auto &param : params.items()) {
-            const auto &key = param.key();
-            const auto &value = param.value();
+        doc->add(e);
 
-            auto found2 = std::find_if(fields.begin(), fields.end(), [&](const document::field_t &c) { return c.first == key; });
-            if (found2 == fields.end()) not_found_field()
+        response["status"] = "ok";
+        res.status = 200;
 
-            doc->entries.emplace_back(e);
+        res.set_content(response.dump(), "application/json");
+    });
+    server.Post("/document/(\\w*)/reserve", [&](lambda_args) {
+        auto &name = req.matches[1];
+        auto found = collection.find_document(name);
+        json response;
 
-            if (found2->second == "text") doc->index_text_field(key);
+        if (found == documents.end()) not_found_document()
+        auto doc = found->get();
+
+        auto params = json::parse(req.body);
+
+        doc->entries.reserve((ulong) params["size"]);
+
+        response["status"] = "ok";
+        res.status = 200;
+
+        res.set_content(response.dump(), "application/json");
+    });
+    server.Post("/document/(\\w*)/multi_add", [&](lambda_args) {
+        auto &name = req.matches[1];
+        auto found = collection.find_document(name);
+        json response;
+
+        if (found == documents.end()) not_found_document()
+        auto doc = found->get();
+
+        auto &fields = doc->fields;
+        auto &entries = doc->entries;
+
+        auto lines = split(req.body, "\n");
+
+        for (const auto &line : lines) {
+            if (line.size() < 5) continue;
+
+            json params;
+
+            try {
+                params = json::parse(line);
+            } catch (std::exception &e) {
+                exception()
+            }
+
+            entry e;
+
+            for (auto &param : params.items()) {
+                const auto &key = param.key();
+                const auto &value = param.value();
+
+                auto found2 = std::find_if(fields.begin(), fields.end(), [&](const document::field_t &c) { return c.first == key; });
+                if (found2 == fields.end()) not_found_field()
+
+                field f;
+                f.name = key;
+
+                if (found2->second == "number") f.val._number = std::make_shared<field::number>((std::string) value);
+                else if (found2->second == "text") f.val._text = std::make_shared<field::text>((std::string) value);
+                else if (found2->second == "keyword") f.val._keyword = std::make_shared<field::keyword>((std::string) value);
+                else if (found2->second == "boolean") f.val._boolean = std::make_shared<field::boolean>((std::string) value);
+
+                e.fields.push_back(f);
+            }
+
+            doc->add(e);
         }
+
+        response["status"] = "ok";
+        res.status = 200;
+
+        res.set_content(response.dump(), "application/json");
+    });
+    server.Post("/document/(\\w*)/index", [&](lambda_args) {
+        auto &name = req.matches[1];
+        auto found = collection.find_document(name);
+        json response;
+
+        if (found == documents.end()) not_found_document()
+        auto doc = found->get();
+
+        doc->index();
 
         response["status"] = "ok";
         res.status = 200;

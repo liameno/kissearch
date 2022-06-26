@@ -69,6 +69,8 @@ namespace kissearch {
         ulong compute_next_number_value(const std::string &field_name);
 
         void clear_cache_idf();
+
+        void index();
         void index_text_field(const std::string &field_name);
 
         static void slice_page(std::vector<result_t> &results, const search_options &options);
