@@ -81,6 +81,8 @@ namespace kissearch {
         } else if (val.is_boolean()) {
             return std::to_string(val._boolean->value);
         }
+
+        throw std::exception();
     }
 
     entry::entry() {

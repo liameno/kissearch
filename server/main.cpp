@@ -55,6 +55,8 @@ inline document::search_options parse_search_options(const json &params) {
 }
 
 int main() {
+    std::cout << "te3" << std::endl;
+
     Server server;
     collection collection;
     auto &documents = collection.documents;

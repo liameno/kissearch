@@ -57,7 +57,7 @@ void load_example(document &document, const std::string &field_name_number, cons
 }
 
 int main() {
-    const std::string file_name = "../index.db";
+    const std::string file_name = "index.db";
     const std::string field_name_number = "id";
     const std::string field_name_text = "title";
     const std::string field_name_keyword = "url";
@@ -101,11 +101,11 @@ int main() {
     auto t_results = document.search(text_query, search_options_text);
     auto k_results = document.search(keyword_query, search_options_keyword);
 
-    std::cout << reset << "Search: " << red << duration_cast<microseconds>(high_resolution_clock::now() - start_time).count() << " ms" << std::endl;
+    std::cout << reset << "Search: " << red << (double)duration_cast<microseconds>(high_resolution_clock::now() - start_time).count() / (double)1000 << " ms" << std::endl;
 
-    while(true) {
+    /*while(true) {
         std::this_thread::sleep_for(seconds(5));
-    }
+    }*/
 
     std::cout << reset << "Found Numbers: " << green << n_results.size() << std::endl;
     std::cout << reset << "Found Texts: " << green << t_results.size() << std::endl;
@@ -115,11 +115,11 @@ int main() {
         auto &field = result.first.find_field(field_name_number);
         std::cout << reset << field._number->value << green << " (score: " << result.second << ")" << std::endl;
     }*/
-    for (auto &result : t_results) {
+    /*for (auto &result : t_results) {
         auto &field_id = result.first.find_field(field_name_number);
         auto &field = result.first.find_field(field_name_text);
         std::cout << magenta << field_id._number->value << reset << " - " << reset << field._text->value << green << " (score: " << result.second << ")" << std::endl;
-    }
+    }*/
     /*for (auto &result : k_results) {
         auto &field = result.first.find_field(field_name_keyword);
         std::cout << reset << field._keyword->value << green << " (score: " << result.second << ")" << std::endl;
