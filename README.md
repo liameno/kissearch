@@ -70,6 +70,12 @@ int main() {
 }
 ```
 
+## Deps
+
+```shell
+cd scripts && sh install_deps.sh
+```
+
 ## Server
 
 ### Build
