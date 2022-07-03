@@ -9,18 +9,9 @@
 #include <algorithm>
 #include <memory>
 
-#define INIT_TERMS_SIZE 30
-#define INIT_INDEX_SIZE 20
 #define INIT_FIELDS_SIZE 4
 
 namespace kissearch {
-    struct term_info {
-        ushort count;
-        double score;
-
-        term_info();
-    };
-
     struct field {
         struct number {
             ulong value;
@@ -29,41 +20,20 @@ namespace kissearch {
             explicit number(const ulong &number);
             explicit number(const std::string &number);
 
-            inline bool operator==(const number &v) const {
-                return this->value == v.value;
-            }
-            inline bool operator==(const ulong &v) const {
-                return this->value == v;
-            }
-            inline bool operator==(const std::string &v) const {
-                return this->value == std::stol(v);
-            }
+            inline bool operator==(const number &v) const { return this->value == v.value; }
+            inline bool operator==(const ulong &v) const { return this->value == v; }
+            inline bool operator==(const std::string &v) const { return this->value == std::stol(v); }
         };
 
         struct text {
-            typedef std::pair<std::string, term_info> index_t;
-
             std::string value;
-            std::vector<std::string> terms;
-            std::vector<index_t> index;
+            ulong terms_length;
 
             text();
             explicit text(const std::string &text);
 
-            std::string &find_term(const std::string &s);
-            term_info &find_index(const std::string &s);
-
-            __gnu_cxx::__normal_iterator<std::basic_string<char> *, std::vector<std::basic_string<char>>>
-            find_term_it(const std::string &s);
-            __gnu_cxx::__normal_iterator<index_t *, std::vector<index_t>>
-            find_index_it(const std::string &s);
-
-            inline bool operator==(const text &v) const {
-                return this->value == v.value;
-            }
-            inline bool operator==(const std::string &v) const {
-                return this->value == v;
-            }
+            inline bool operator==(const text &v) const { return this->value == v.value; }
+            inline bool operator==(const std::string &v) const { return this->value == v; }
         };
 
         struct keyword {
@@ -72,12 +42,8 @@ namespace kissearch {
             keyword();
             explicit keyword(const std::string &keyword);
 
-            inline bool operator==(const keyword &v) const {
-                return this->value == v.value;
-            }
-            inline bool operator==(const std::string &v) const {
-                return this->value == v;
-            }
+            inline bool operator==(const keyword &v) const { return this->value == v.value; }
+            inline bool operator==(const std::string &v) const { return this->value == v; }
         };
 
         struct boolean {
@@ -87,15 +53,9 @@ namespace kissearch {
             explicit boolean(const bool &boolean);
             explicit boolean(const std::string &boolean);
 
-            inline bool operator==(const boolean &v) const {
-                return this->value == v.value;
-            }
-            inline bool operator==(const bool &v) const {
-                return this->value == v;
-            }
-            inline bool operator==(const std::string &v) const {
-                return this->value == (v == "true" || v == "1");
-            }
+            inline bool operator==(const boolean &v) const { return this->value == v.value; }
+            inline bool operator==(const bool &v) const { return this->value == v; }
+            inline bool operator==(const std::string &v) const { return this->value == (v == "true" || v == "1"); }
         };
 
         struct value {
@@ -133,9 +93,7 @@ namespace kissearch {
             return std::find_if(fields.begin(), fields.end(), lambda)->val;
         }
 
-        inline bool operator==(const entry &e) const {
-            return this->fields == e.fields;
-        }
+        inline bool operator==(const entry &e) const { return this->fields == e.fields; }
     };
 }
 

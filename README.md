@@ -7,8 +7,7 @@ A fast fulltext search engine
 ## Features
 
 - BM25
-- Cache
-- Index
+- Inverted Index
 - Porter2 Stemmer
 - Tokenizer
 - Load/Save index from file/memory
@@ -44,9 +43,9 @@ example/
 ```cpp
 //full: example/example.cpp
 int main() {
-    const std::string file_name         = "../index.db";
-    const std::string field_name_text   = "title";
-    const std::string text_query        = "algorithms";
+    const std::string file_name       = "index.db";
+    const std::string field_name_text = "title";
+    const std::string text_query      = "algorithms";
     
     document::search_options search_options_text;
     search_options_text.field_names = { field_name_text };
@@ -107,16 +106,30 @@ POST /document/x/add -d '{"a":"example"}' #create entry
 # {
 #   "status":"ok"
 # }
-POST document/x/index -d '' #index 
+POST document/x/index -d '' #index all text fields
 # {
 #   "status":"ok"
 # }
 POST /document/x/remove -d '{"q":"example","field_names":"a"}' #remove entries, only after index
-# {
+#{  //default
+#   "q": empty
+#   "field_names": empty
+#   "sort_by_score": true
+#   "page": 1
+#   "page_size": 10
+#}
+#}# {
 #   "count":1,
 #   "status":"ok"
 # }
 POST /document/x/search -d '{"q":"example","field_names":"a"}' #search entries, only after index
+#{  //default
+#   "q": empty
+#   "field_names": empty
+#   "sort_by_score": true
+#   "page": 1
+#   "page_size": 10
+#}
 # {
 #   "count":1,
 #   "found":[{"entry":{"a":"example"},"score":0.2876820724517809}]
@@ -147,8 +160,8 @@ comparison/
 
 | Name              | Memory | Time(index/add) | Time(search) |
 |-------------------|--------|-----------------|--------------|
-| Kissearch(server) | 30mb   | 12s             | 9ms          |
-| Kissearch(lib)    | 28mb   | 0.2s            | 0.7ms        |
+| Kissearch(server) | 16mb   | 12s             | 11ms         |
+| Kissearch(lib)    | 16mb   | 0.4s            | 5ms          |
 | Typesense(server) | 118mb  | 53s             | 13ms         |
 
 ###### Entries Size: 7000

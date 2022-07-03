@@ -16,6 +16,8 @@ void load_example(document &document, const std::string &field_name_number, cons
             { "TrustRank is an algorithm that conducts link analysis to separate useful webpages from spam and helps search engine rank pages in SERPs (Search Engine Results Pages)", "https://en.wikipedia.org/wiki/TrustRank" },
             { "The CheiRank is an eigenvector with a maximal real eigenvalue of the Google matrix constructed for a directed network with the inverted directions of links",           "https://en.wikipedia.org/wiki/CheiRank" },
             { "PageRank (PR) is an algorithm used by Google Search to rank web pages in their search engine results",                                                                  "https://en.wikipedia.org/wiki/PageRank" },
+            { "Okapi BM25 (BM is an abbreviation of best matching) is a ranking function used by search engines to estimate the relevance of documents to a given search query",       "https://en.wikipedia.org/wiki/Okapi_BM25" },
+            { "term frequency–inverse document frequency",                                                                                                                             "https://en.wikipedia.org/wiki/Tf%E2%80%93idf" },
     };
 
     for (int i = 0; i < count; ++i) {
@@ -72,7 +74,7 @@ TEST_CASE("Document", "[document]") {
 
     BENCHMARK("load from memory") {
         document.entries.clear();
-        return load_example(document, field_name_number, field_name_text, field_name_keyword, 1000); //1000(count) * 5 = 5000(entries.size)
+        return load_example(document, field_name_number, field_name_text, field_name_keyword, 1000); //7000
     };
     BENCHMARK("save") {
         return document.save(file_name);
@@ -87,8 +89,6 @@ TEST_CASE("Document", "[document]") {
     };
 
     REQUIRE(document.entries[0].fields.size() == 3);
-    REQUIRE(document.entries[0].fields[1].val._text->terms.size() > 0);
-    REQUIRE(document.entries[0].fields[1].val._text->index.size() > 0);
 
     document::search_options search_options_number;
     document::search_options search_options_text;
@@ -110,4 +110,46 @@ TEST_CASE("Document", "[document]") {
         auto results = document.search(keyword_query, search_options_keyword);
         REQUIRE(results.size() == 10); //10 - page size
     };
+}
+TEST_CASE("Document ranking", "[document_ranking]") {
+    std::vector<std::string> texts = {
+            { "hello good man" },
+            { "quite windy windy london" },
+            { "weather windy today" },
+    };
+    const std::string field_name_text = "title";
+
+    collection collection;
+    collection.documents.push_back(std::make_shared<document>());
+    auto &document = *collection.documents.front();
+
+    for (auto &text : texts) {
+        entry e;
+        field f;
+
+        f.name = field_name_text;
+        f.val._text = std::make_shared<field::text>(text);
+
+        e.fields.push_back(f);
+        document.entries.push_back(e);
+    }
+
+    document.index_text_field(field_name_text);
+
+   /* for (auto &i : document.in) {
+        for (auto &e : i.second.es) {
+            std::cout << i.first << "-" << e.second.score << std::endl;
+        }
+    }*/
+
+    /*for (auto &i : document.in) {
+        for (auto &e : i.second.es) {
+            if (i.first == "windi") {
+                if (e.first == &document.entries[0] || e.first == &document.entries[1]) REQUIRE(e.second.score == Approx(0.434457));
+                else if (e.first == &document.entries[2]) REQUIRE(e.second.score == Approx(0.490051));
+            }
+            else if (i.first == "london" || i.first == "quit") REQUIRE(e.second.score == Approx(0.906649));
+            else REQUIRE(e.second.score == Approx(1.02267));
+        }
+    }*/
 }

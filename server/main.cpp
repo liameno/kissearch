@@ -55,8 +55,6 @@ inline document::search_options parse_search_options(const json &params) {
 }
 
 int main() {
-    std::cout << "te3" << std::endl;
-
     Server server;
     collection collection;
     auto &documents = collection.documents;
@@ -92,15 +90,13 @@ int main() {
         if (found != documents.end()) already_exists_document()
         auto params = json::parse(req.body);
 
-        ulong cache_idf_size = 512;
         double k = 1.2;
         double b = 0.75;
 
-        if (params.find("cache_idf_size") != params.end()) cache_idf_size = params["cache_idf_size"];
         if (params.find("k") != params.end()) k = params["k"];
         if (params.find("b") != params.end()) b = params["b"];
 
-        auto doc = std::make_shared<document>(cache_idf_size, k, b);
+        auto doc = std::make_shared<document>(k, b);
         doc->name = name;
 
         for (auto &param : params.items()) {
@@ -147,23 +143,6 @@ int main() {
         }
 
         doc->add(e);
-
-        response["status"] = "ok";
-        res.status = 200;
-
-        res.set_content(response.dump(), "application/json");
-    });
-    server.Post("/document/(\\w*)/reserve", [&](lambda_args) {
-        auto &name = req.matches[1];
-        auto found = collection.find_document(name);
-        json response;
-
-        if (found == documents.end()) not_found_document()
-        auto doc = found->get();
-
-        auto params = json::parse(req.body);
-
-        doc->entries.reserve((ulong) params["size"]);
 
         response["status"] = "ok";
         res.status = 200;
@@ -251,7 +230,7 @@ int main() {
         auto results = doc->search((std::string) params["q"], options, true);
 
         for (const auto &result : results) {
-            doc->remove(result.first);
+            doc->remove(*result.first);
         }
 
         response["status"] = "ok";
@@ -277,7 +256,7 @@ int main() {
             json object = json::object();
             object["entry"] = json::object();
 
-            for (auto &f : result.first.fields) {
+            for (auto &f : result.first->fields) {
                 object["entry"][f.name] = f.val_s();
             }
 

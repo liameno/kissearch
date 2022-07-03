@@ -90,22 +90,22 @@ namespace {
 
         return false;
     }
-    void trim_start(std::string &s) {
+    inline void trim_start(std::string &s) {
         static const auto lambda_space = [](const char &c) { return std::isspace(c); };
         auto first = std::find_if_not(s.begin(), s.end(), lambda_space);
         s.erase(s.begin(), first);
     }
-    void trim_end(std::string &s) {
+    inline void trim_end(std::string &s) {
         static const auto lambda_space = [](const char &c) { return std::isspace(c); };
         auto last = std::find_if_not(s.rbegin(), s.rend(), lambda_space);
         s.erase(last.base(), s.end());
     }
-    void to_lower(std::string &s) {
+    inline void to_lower(std::string &s) {
         for (auto &c : s) {
             c = std::tolower(c);
         }
     }
-    void to_upper(std::string &s) {
+    inline void to_upper(std::string &s) {
         for (auto &c : s) {
             c = std::toupper(c);
         }
@@ -139,7 +139,7 @@ namespace {
 
         return true;
     }
-    void remove_special_chars(std::string &s) {
+    inline void remove_special_chars(std::string &s) {
         const auto lambda = [](const char &c) { return !std::isalpha(c) && !std::isdigit(c) && c != '\''; };
         s.erase(std::remove_if(s.begin(), s.end(), lambda), s.end());
     }

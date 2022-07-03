@@ -18,8 +18,7 @@ namespace kissearch {
     class document {
     public:
         typedef std::pair<std::string, std::string> field_t;
-        typedef std::pair<entry &, double> result_t;
-        typedef std::pair<std::string, double> cache_idf_t;
+        typedef std::pair<entry *, double> result_t;
 
         struct search_options {
             std::vector<std::string> field_names;
@@ -29,53 +28,54 @@ namespace kissearch {
 
             search_options();
         };
+        struct entry_info {
+            double score = 0;
+            ulong count = 0;
+        };
+        struct term_info {
+            std::unordered_map<entry *, entry_info> entries;
+            double idf = 0;
+        };
 
         std::string name;
         std::vector<entry> entries;
         std::vector<field_t> fields;
-        std::vector<cache_idf_t> cache_idf;
+        std::unordered_map<std::string, term_info> term_index;
     private:
         double k;
         double b;
-        ulong cache_idf_size;
         std::mutex mutex;
         struct sb_stemmer *stemmer;
     public:
-        static std::string get_file_content(const std::string &file_name);
+        inline static std::string get_file_content(const std::string &file_name);
 
-        static bool is_stop(const std::string &s);
+        inline static bool is_stop(const std::string &s);
 
-        static void normalize(std::string &s);
-        static std::vector<std::string> tokenize(const std::string &text);
-        void stem(std::vector<std::string> &terms);
-
-        static void tokenize(const field::value &field);
-        void stem(field::value &field);
-        static void sort_text_results(std::vector<result_t> &results);
+        inline static void normalize(std::string &s);
+        inline static std::vector<std::string> tokenize(const std::string &text);
+        inline void stem(std::vector<std::string> &terms);
     private:
-        static void write_block(std::stringstream &content, const std::string &type, const std::string &value);
-        static void write_block(std::stringstream &content, const std::string &key, const std::string &type, const std::string &value);
-        static void parse_block(const std::string &s, std::string &key, std::string &type, std::string &value);
+        inline static void write_block(std::stringstream &content, const std::string &type, const std::string &value);
+        inline static void write_block(std::stringstream &content, const std::string &key, const std::string &type, const std::string &value);
+        inline static void parse_block(const std::string &s, std::string &key, std::string &type, std::string &value);
     public:
-        explicit document(const ulong &cache_idf_size = 512, const double &k = 1.2, const double &b = 0.75);
+        explicit document(const double &k = 1.2, const double &b = 0.75);
         ~document();
 
-        ulong compute_document_length_in_words(const std::string &field_name);
-        double compute_tf(entry &e, const std::string &term, field::value &field);
-        double compute_idf(entry &e, const std::string &term, const std::string &field_name);
-        double compute_bm25(entry &e, const std::string &term, field::value &field, const std::string &field_name, const ulong &document_length_in_words);
+        inline ulong compute_document_length_in_words(const std::string &field_name);
+        inline double compute_tf(entry &e, const std::string &term);
+        inline void compute_idf(const ulong &entries_size);
+        inline double compute_bm25(entry &e, const std::string &term, const double &idf, const ulong &terms_length, const double &avgdl);
 
         //ID
         ulong compute_next_number_value(const std::string &field_name);
 
-        void clear_cache_idf();
-
         void index();
         void index_text_field(const std::string &field_name);
 
-        static void slice_page(std::vector<result_t> &results, const search_options &options);
+        inline static void slice_page(std::vector<result_t> &results, const search_options &options);
 
-        std::vector<result_t> search(const std::string &query, const search_options &options, const bool is_delete = false);
+        std::vector<result_t> search(const std::string &query, const search_options &options, const bool is_all = false);
 
         void remove(const entry &e);
         void add(const entry &e);
