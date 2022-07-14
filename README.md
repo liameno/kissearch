@@ -1,6 +1,6 @@
 <p align="center">
-  <img src="images/logos/1/cover.png#gh-light-mode-only" width="350px" />
-  <img src="images/logos/2/cover.png#gh-dark-mode-only" width="350px" />
+  <img src="images/logos/2/cover.png#gh-light-mode-only" width="100%" />
+  <img src="images/logos/1/cover.png#gh-dark-mode-only" width="350px" />
 </p>
 
 # kissearch
