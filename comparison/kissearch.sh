@@ -1,7 +1,6 @@
 #!/bin/bash
 
 curl -XPOST "0.0.0.0:8080/document/x" -d '{"id":"number", "title":"text", "url":"keyword"}'
-curl -XPOST "0.0.0.0:8080/document/reserve" -d '{"size":7000}'
 
 n=0
 s=""
