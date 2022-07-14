@@ -3,6 +3,7 @@
 #include <string>
 #include <filesystem>
 
+#include "str.h"
 #include "document.h"
 #include "collection.h"
 
@@ -65,7 +66,7 @@ int main() {
     const std::string field_name_keyword = "url";
 
     const std::string number_query = "5";
-    const std::string text_query = "algorithm";
+    const std::string text_query = "algorithms link";
     const std::string keyword_query = "https://en.wikipedia.org/wiki/Hilltop_algorithm";
 
     document::search_options search_options_number;
@@ -90,7 +91,7 @@ int main() {
         load_example(document, field_name_number, field_name_text, field_name_keyword);
         std::cout << reset << "From example" << std::endl;
     } else {
-        document.load(file_name);
+        //document.load(file_name);
         std::cout << reset << "From db" << std::endl;
     }
 
@@ -127,11 +128,11 @@ int main() {
         auto &field = result.first->find_field(field_name_number);
         std::cout << reset << field._number->value << green << " (score: " << result.second << ")" << std::endl;
     }*/
-    /*for (auto &result : t_results) {
+    for (auto &result : t_results) {
         auto &field_id = result.first->find_field(field_name_number);
         auto &field = result.first->find_field(field_name_text);
         std::cout << magenta << field_id._number->value << reset << " - " << reset << field._text->value << green << " (score: " << result.second << ")" << std::endl;
-    }*/
+    }
     /*for (auto &result : k_results) {
         auto &field = result.first.find_field(field_name_keyword);
         std::cout << reset << field._keyword->value << green << " (score: " << result.second << ")" << std::endl;
@@ -139,7 +140,7 @@ int main() {
 
     start_time = high_resolution_clock::now();
 
-    document.save(file_name);
+    //document.save(file_name);
 
     std::cout << reset << "Save: " << cyan << end_time_ms << " ms" << std::endl;
 

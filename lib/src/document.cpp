@@ -7,12 +7,6 @@
 #include "../include/compression.h"
 
 namespace kissearch {
-    document::search_options::search_options() {
-        this->sort_by_score = true;
-        this->page = 1;
-        this->page_size = 10;
-    }
-
     inline std::string document::get_file_content(const std::string &file_name) {
         std::ifstream stream(file_name);
         std::string buffer;
@@ -155,6 +149,30 @@ namespace kissearch {
         auto tf = compute_tf(e, term);
         return idf * (tf * (k + 1)) / (tf + k * (1 - b + b * terms_length / avgdl));
     }
+    int document::compute_damerau_levenshtein_distance(std::string s, std::string v) {
+        const ulong s_size = s.length();
+        const ulong v_size = v.length();
+
+        int d[s_size + 1][v_size + 1];
+        int cost;
+
+        for (int i = 0; i <= s_size; i++) d[i][0] = i;
+        for (int j = 0; j <= v_size; j++) d[0][j] = j;
+        for (int i = 1; i <= s_size; i++) {
+            for(int j = 1; j<= v_size; j++) {
+                if(s[i - 1] == v[j - 1]) cost = 0;
+                else cost = 1;
+
+                d[i][j] = std::min(d[i-1][j] + 1, std::min(d[i][j-1] + 1, d[i-1][j-1] + cost));
+
+                if((i > 1) && (j > 1) && (s[i-1] == v[j-2]) && (s[i-2] == v[j-1])) {
+                    d[i][j] = std::min( d[i][j], d[i-2][j-2] + cost);
+                }
+            }
+        }
+
+        return d[s_size][v_size];
+    }
 
     ulong document::compute_next_number_value(const std::string &field_name) {
         if (entries.empty()) return 1;
@@ -230,47 +248,63 @@ namespace kissearch {
         results.reserve(options.page_size);
 
         for (const auto &field_name : options.field_names) {
-            for (auto &i : term_index) {
-                for (auto &term : terms) {
-                    if (i.first != term) continue;
+            auto type = std::find_if(fields.begin(), fields.end(),[&](auto &f) { return f.first == field_name; })->second;
 
-                    for (auto &entry : i.second.entries) {
-                        auto &score = entry.second.score;
-                        if (score <= 0) continue;
+            if (type == "text") {
+                for (auto &i : term_index) {
+                    for (auto &term : terms) {
+                        if (i.first.length() < options.text.word_min_size) continue;
+                        auto &match_type = options.text._match_type;
 
-                        const auto lambda = [&](const result_t &c) { return c.first == entry.first; };
-                        auto found = std::find_if(results.begin(), results.end(), lambda);
+                        if (match_type == options.text.match_type::strict) {
+                            if (i.first != term) {
+                                continue;
+                            }
+                        } else if (match_type == options.text.match_type::fuzzy) {
+                            if (compute_damerau_levenshtein_distance(i.first, term) > options.text.fuzzy_max_damerau_levenshtein_distance) {
+                                continue;
+                            }
+                        }
 
-                        if (found != results.end()) found->second += score;
-                        else results.emplace_back(entry.first, score);
+                        for (auto &entry : i.second.entries) {
+                            auto &score = entry.second.score;
+                            if (score <= 0) continue;
+
+                            const auto lambda = [&](const result_t &c) { return c.first == entry.first; };
+                            auto found = std::find_if(results.begin(), results.end(), lambda);
+
+                            if (found != results.end()) found->second += score;
+                            else results.emplace_back(entry.first, score);
+                        }
                     }
                 }
-            }
-            for (auto &entry : entries) {
-                auto &field = entry.find_field(field_name);
-                double score = 0;
+            } else {
+                for (auto &entry : entries) {
+                    auto &field = entry.find_field(field_name);
+                    double score = 0;
 
-                if (field.is_number()) {
-                    if (field._number->operator==(std::stol(query))) {
-                        score = 1;
+                    if (type == "number") {
+                        if (field._number->operator==(std::stol(query))) {
+                            score = 1;
+                        }
+                    } else if (type == "keyword") {
+                        if (field._keyword->operator==(query)) {
+                            score = 1;
+                        }
+                    } else if (type == "boolean") {
+                        if (field._boolean->operator==(query)) {
+                            score = 1;
+                        }
                     }
-                } else if (field.is_keyword()) {
-                    if (field._keyword->operator==(query)) {
-                        score = 1;
-                    }
-                } else if (field.is_boolean()) {
-                    if (field._boolean->operator==(query)) {
-                        score = 1;
-                    }
+
+                    if (score <= 0) continue;
+
+                    const auto lambda = [&](const result_t &c) { return c.first == &entry; };
+                    auto found = std::find_if(results.begin(), results.end(), lambda);
+
+                    if (found != results.end()) found->second += score;
+                    else results.emplace_back(&entry, score);
                 }
-
-                if (score <= 0) continue;
-
-                const auto lambda = [&](const result_t &c) { return c.first == &entry; };
-                auto found = std::find_if(results.begin(), results.end(), lambda);
-
-                if (found != results.end()) found->second += score;
-                else results.emplace_back(&entry, score);
             }
         }
 

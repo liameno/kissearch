@@ -110,6 +110,30 @@ namespace {
             c = std::toupper(c);
         }
     }
+    ulong equal_suffix(const std::string &s, const std::string &v) {
+        const size_t v_size = v.size();
+        ulong count = 0;
+
+        for (int i = 0; i < v_size; ++i) {
+            if (s[i] == v[i]) ++count;
+        }
+
+        return count;
+    }
+    ulong equal_preffix(const std::string &s, const std::string &v) {
+        ulong count = 0;
+
+        int s_i = s.size() - 1;
+        int v_i = v.size() - 1;
+
+        while(s_i >= 0 && v_i >= 0) {
+            if (s[s_i] == v[v_i]) ++count;
+            --s_i;
+            --v_i;
+        }
+
+        return count;
+    }
     bool starts_with(const std::string &s, const std::string &v) {
         const size_t v_size = v.size();
         const size_t s_size = s.size();

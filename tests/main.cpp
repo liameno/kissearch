@@ -43,6 +43,9 @@ void load_example(document &document, const std::string &field_name_number, cons
         }
     }
 
+    document.fields.emplace_back(field_name_number, "number");
+    document.fields.emplace_back(field_name_text, "text");
+    document.fields.emplace_back(field_name_keyword, "keyword");
     document.name = "example";
 }
 
@@ -76,13 +79,14 @@ TEST_CASE("Document", "[document]") {
         document.entries.clear();
         return load_example(document, field_name_number, field_name_text, field_name_keyword, 1000); //7000
     };
-    BENCHMARK("save") {
+
+    /*BENCHMARK("save") {
         return document.save(file_name);
     };
     BENCHMARK("load from db") {
         document.entries.clear();
         return document.load(file_name);
-    };
+    };*/
 
     BENCHMARK("index") {
         return document.index_text_field(field_name_text);

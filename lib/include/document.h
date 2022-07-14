@@ -22,11 +22,20 @@ namespace kissearch {
 
         struct search_options {
             std::vector<std::string> field_names;
-            bool sort_by_score;
-            ulong page;
-            ulong page_size;
+            bool sort_by_score = true;
+            ulong page = 1;
+            ulong page_size = 10;
 
-            search_options();
+            struct {
+                enum match_type {
+                    strict,
+                    fuzzy,
+                };
+
+                ulong word_min_size = 3;
+                ulong fuzzy_max_damerau_levenshtein_distance = 2;
+                match_type _match_type = match_type::fuzzy;
+            } text;
         };
         struct entry_info {
             double score = 0;
@@ -58,14 +67,15 @@ namespace kissearch {
         inline static void write_block(std::stringstream &content, const std::string &type, const std::string &value);
         inline static void write_block(std::stringstream &content, const std::string &key, const std::string &type, const std::string &value);
         inline static void parse_block(const std::string &s, std::string &key, std::string &type, std::string &value);
-    public:
-        explicit document(const double &k = 1.2, const double &b = 0.75);
-        ~document();
-
+    private:
         inline ulong compute_document_length_in_words(const std::string &field_name);
         inline double compute_tf(entry &e, const std::string &term);
         inline void compute_idf(const ulong &entries_size);
         inline double compute_bm25(entry &e, const std::string &term, const double &idf, const ulong &terms_length, const double &avgdl);
+        int compute_damerau_levenshtein_distance(std::string s, std::string v);
+    public:
+        explicit document(const double &k = 1.2, const double &b = 0.75);
+        ~document();
 
         //ID
         ulong compute_next_number_value(const std::string &field_name);
