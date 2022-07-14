@@ -1,3 +1,8 @@
+<p align="center">
+  <img src="images/logos/1/cover.png#gh-light-mode-only" width="350px" />
+  <img src="images/logos/2/cover.png#gh-dark-mode-only" width="350px" />
+</p>
+
 # kissearch
 
 A fast fulltext search engine
@@ -6,12 +11,16 @@ A fast fulltext search engine
 
 ## Features
 
-- BM25
-- Inverted Index
-- Porter2 Stemmer
-- Tokenizer
-- Load/Save index from file/memory
-- Compression(when saving)
+- **Strict Search**
+- **Fuzzy Search:** Damerau Levenshtein Distance algorithm
+- **Ranking:** BM25 algorithm
+- **Inverted Index**
+- **Stemmer:** Porter2 algorithm
+- **Tokenizer:** with space
+- **Load/Save:** load from memory/file
+- **Compression:** when saving
+- **Lib:** C++
+- **API**
 
 ### Fields
 
@@ -158,13 +167,11 @@ curl -XPOST 0.0.0.0:8080/document/x/search -d '{"q":"example","field_names":"a"}
 comparison/
 ```
 
-| Name              | Memory | Time(index/add) | Time(search) |
-|-------------------|--------|-----------------|--------------|
-| Kissearch(server) | 16mb   | 12s             | 11ms         |
-| Kissearch(lib)    | 16mb   | 0.4s            | 5ms          |
-| Typesense(server) | 118mb  | 53s             | 13ms         |
-
-###### Entries Size: 7000
+| Name              | Memory | index/add(Time) | fuzzy search(Time) |
+|-------------------|--------|-----------------|--------------------|
+| Kissearch(server) | 16mb   | 12s             | 12ms               |
+| Kissearch(lib)    | 16mb   | 0.3s            | 10ms               |
+| Typesense(server) | 118mb  | 53s             | 13ms               |
 
 ## License
 
